@@ -1,5 +1,6 @@
 console.log("JEE.js 1.5")
 
+
 var jee
 setTimeout(() => (jee = new Jee()), 10)
 
@@ -20,6 +21,7 @@ class JEE {
     fpsLimit = 63
     fullscreen = false
     autorun = true
+    loadPause = 1
 
     view = new __JEEView(this)
     control = new __JEEControl(this)
@@ -41,11 +43,12 @@ class JEE {
         }
 
         let wait = setInterval(() => {
+            this.view.curtainIn.innerHTML = `<b>JEE.js</b><br><small>${this.files.ok}/${this.files.all}</small>`
             if (this.files.all == this.files.ok) {
                 clearInterval(wait)
-                this.#startGame()
+                setTimeout(() => this.#startGame(), this.loadPause * 1000)
             }
-        }, 300)
+        }, 100)
     }
 
     #fpsTime
@@ -346,23 +349,22 @@ class __JEEView {
             document.body.appendChild(this.curtain)
         }
 
-        this.curtain.style.cssText +=
-            `
-            position: absolute ;
-            top: 0 ;
-            left: 0 ;
-            height: 100% ;
-            width: 100% ;
+        this.curtain.style.cssText += `
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
             background: ${document.body.style.backgroundColor};
-            z-index: 9999 ;
-            display: flex ;
-            align-items: center ;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
             justify-content: center;
             line-height: 300%;
             `
         this.curtainIn = document.createElement("div")
         this.curtain.appendChild(this.curtainIn)
-        this.curtainIn.style.cssText = "text-align: center padding: 30px"
+        this.curtainIn.style.cssText = "text-align: center; padding: 30px;"
         if (this.curtainCss) this.curtainIn.style.cssText += this.curtainCss
         this.curtainIn.innerHTML = "<b>JEE.js</b><br><small>0/0</small>"
     }
@@ -579,105 +581,11 @@ class __JEEControl {
     }
 
     #initKeys() {
-        const keyNames = {
-            backspace: false,
-            enter: false,
-            shift: false,
-            ctrl: false,
-            escape: false,
-            space: false,
-            left: false,
-            up: false,
-            right: false,
-            down: false,
-            n0: false,
-            n1: false,
-            n2: false,
-            n3: false,
-            n4: false,
-            n5: false,
-            n6: false,
-            n7: false,
-            n8: false,
-            n9: false,
-            a: false,
-            b: false,
-            c: false,
-            d: false,
-            e: false,
-            f: false,
-            g: false,
-            h: false,
-            i: false,
-            j: false,
-            k: false,
-            l: false,
-            m: false,
-            n: false,
-            o: false,
-            p: false,
-            q: false,
-            r: false,
-            s: false,
-            t: false,
-            u: false,
-            v: false,
-            w: false,
-            x: false,
-            y: false,
-            z: false,
-        }
+        const keyNames = { backspace: false, enter: false, shift: false, ctrl: false, escape: false, space: false, left: false, up: false, right: false, down: false, n0: false, n1: false, n2: false, n3: false, n4: false, n5: false, n6: false, n7: false, n8: false, n9: false, a: false, b: false, c: false, d: false, e: false, f: false, g: false, h: false, i: false, j: false, k: false, l: false, m: false, n: false, o: false, p: false, q: false, r: false, s: false, t: false, u: false, v: false, w: false, x: false, y: false, z: false, }
         this.keys = { ...keyNames }
         this.press = { ...keyNames }
         this.pressK = {}
-        const keyNums = {
-            38: "up",
-            40: "down",
-            37: "left",
-            39: "right",
-            32: "space",
-            13: "enter",
-            27: "escape",
-            16: "shift",
-            17: "ctrl",
-            8: "backspace",
-            65: "a",
-            66: "b",
-            67: "c",
-            68: "d",
-            69: "e",
-            70: "f",
-            71: "g",
-            72: "h",
-            73: "i",
-            74: "j",
-            75: "k",
-            76: "l",
-            77: "m",
-            78: "n",
-            79: "o",
-            80: "p",
-            81: "q",
-            82: "r",
-            83: "s",
-            84: "t",
-            85: "u",
-            86: "v",
-            87: "w",
-            88: "x",
-            89: "y",
-            90: "z",
-            48: "n0",
-            49: "n1",
-            50: "n2",
-            51: "n3",
-            52: "n4",
-            53: "n5",
-            54: "n6",
-            55: "n7",
-            56: "n8",
-            57: "n9",
-        }
+        const keyNums = { 38: "up", 40: "down", 37: "left", 39: "right", 32: "space", 13: "enter", 27: "escape", 16: "shift", 17: "ctrl", 8: "backspace", 65: "a", 66: "b", 67: "c", 68: "d", 69: "e", 70: "f", 71: "g", 72: "h", 73: "i", 74: "j", 75: "k", 76: "l", 77: "m", 78: "n", 79: "o", 80: "p", 81: "q", 82: "r", 83: "s", 84: "t", 85: "u", 86: "v", 87: "w", 88: "x", 89: "y", 90: "z", 48: "n0", 49: "n1", 50: "n2", 51: "n3", 52: "n4", 53: "n5", 54: "n6", 55: "n7", 56: "n8", 57: "n9", }
         // for (const j in keyNums) this.keys[keyNums[j]] = false
         // for (const j in keyNums) this.press[keyNums[j]] = false
         // let a = {}
@@ -749,16 +657,22 @@ class JEEObj {
     isClone = false
     cameraZ = 1
     border = {
-        width: undefined,
-        type: undefined,
-        color: undefined,
-        txtFnc: undefined,
-        field: undefined,
+        width: null,
+        type: null,
+        color: null,
+        txtFnc: null,
+        field: null,
     }
     flipX = false
     flipY = false
     atCamera = false
     nonContact
+    segPics = {
+        file: '',
+        fileData: null,
+        list: [],
+        gen: (x, y, w, h, stepX, stepY, count) => { } // gen list
+    }
 
     collider = new __JEEObjCollider(this)
     view = new __JEEObjView(this)
@@ -778,11 +692,12 @@ class JEEObj {
 
     #initOrig() {
         this.name = this.constructor.name
-        console.log(">>>>>>> ORIG >>>>>>>>>>", this.name)
+        // console.log(">>>>>>> ORIG >>>>>>>>>>", this.name)
 
         this.init()
 
         for (let pic of this.pics) this.picsData.push(this.jee.files.load(pic))
+        if (this.segPics.file) this.segPics.fileData = this.jee.files.load(this.segPics.file)
 
         this.#ready = true
     }
@@ -964,7 +879,7 @@ class JEEObj {
         if (keys.s && keys.a) angle = -135
 
         // if (keys.w || keys.s || keys.a || keys.d) this.stepA(speed, angle)
-        if (angle) this.stepA(speed, angle)
+        if (angle !== undefined) this.stepA(speed, angle)
 
         return angle
     }
@@ -1060,14 +975,54 @@ class JEEObj {
     contactsIn(key, val) {
         return this.collider.contacts(key, val, true)
     }
+
+
+    pic = {
+        /** List url image files */
+        list: [],
+        /** Pic number in the pic.list[], or part number in the pic.parts[] */
+        picNum: 0,
+        /** Shift image X */
+        x: 0,
+        /** Shift image Y */
+        y: 0,
+        /** If parts exists then picNum.
+         * Format part item: [x, y, width, height, picNum = 0]
+         */
+        parts: [],
+        genParts: (x, y, width, height, stepX, stepY, count, picNum = 0) => {
+            this.pic.parts = []
+            for (let i = 0; i < count; i++)
+                this.pic.parts.push([
+                    x + stepX * i,
+                    y + stepY * i,
+                    width, height,
+                    picNum
+                ])
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class __JEEObjView {
     #obj
     #jee
 
     image
-    picFiles
+    // picFiles
 
     constructor(obj) {
         if (obj instanceof JEEObj) this.#obj = obj
@@ -1361,8 +1316,6 @@ class __JEEObjPhysics {
         const backs = []
         const collsGrnd = []
 
-        // вроде оно не только сталкивания проверяет, но еще величину захода, и компенсирует ее
-        // но еще и выталкивает к ближней стороне при попадании одного на другого
         for (const obj of this.#jee.physics.getList())
             if (obj instanceof JEEObj &&
                 this.#obj.id != obj.id &&
@@ -1405,7 +1358,7 @@ class __JEEObjPhysics {
                 if (m[1] < nyT) nyT = m[1]
                 if (m[1] > nyB) nyB = m[1]
             }
-            // const obj = this.#obj
+
             const nx = self.x + nxL + nxR
             const ny = self.y + nyT + nyB
             if (nx != self.x || ny != self.y) {
@@ -1414,7 +1367,6 @@ class __JEEObjPhysics {
                 self.collider.setCollider()
             }
         }
-        // console.log(colls.length)
 
         coll1 = self.collider.getScope()
         for (const coll2 of collsGrnd) {
@@ -1425,20 +1377,16 @@ class __JEEObjPhysics {
                 coll1.bottom - 1 < coll2.top
             ) {
                 this.onGround = true
-                // this.gravVel = 0
-                // console.log('xxxxxx')
             }
         }
 
         if (this.mass) {
-            // console.log(collsGrnd.length, this.onGround, this.gravVel)
             if (!this.onGround) this.gravVel -= 0.5
             else this.gravVel = 0
         }
     }
 
     jump(val) {
-        // console.log("JUMP")
         if (this.onGround) this.gravVel = val
     }
 }
