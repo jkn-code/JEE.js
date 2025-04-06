@@ -2,7 +2,8 @@ console.log("JEE.js 1.5")
 
 
 var jee
-setTimeout(() => (jee = new Jee()), 10)
+// setTimeout(() => (jee = new Jee()), 100)
+window.onload = () => jee = new Jee()
 
 class JEE {
     static _ = {}
@@ -22,6 +23,13 @@ class JEE {
     fullscreen = false
     autorun = true
     loadPause = 0.5
+    border = {
+        width: null,
+        type: null,
+        color: null,
+        txtFnc: null,
+        field: null,
+    }
 
     view = new __JEEView(this)
     control = new __JEEControl(this)
@@ -57,6 +65,9 @@ class JEE {
         console.log("::: start jee")
 
         this.#fpsTime = 1000 / this.fpsLimit
+
+        if (this.border.color || this.border.field || this.border.txtFnc || this.border.type || this.border.width)
+            this.border.on = true
 
         // if (this.fullscreen && this.autorun === false)
         //		 this.#toggleFullScreen()
@@ -700,7 +711,7 @@ class JEEObj {
     ready = false
 
     constructor(parent) {
-        if (jee && jee instanceof JEE) this.jee = jee 
+        if (jee && jee instanceof JEE) this.jee = jee
         this.jee.objects.push(this)
         this.id = this.jee.getNewObjId()
 
@@ -743,14 +754,17 @@ class JEEObj {
                     v == 'border'
                 ) {
                     for (const c in this.#parent[v]) {
-                        // console.log(c)
+                        // console.log(v, c, this.#parent[v][c])
                         this[v][c] = this.#parent[v][c]
                     }
+                    if (v == 'body') // get set
+                        this.body.type = this.#parent.body.type
                 }
                 else {
                     if (this.#parent[v] !== undefined)
                         this[v] = JSON.parse(JSON.stringify(this.#parent[v]))
                 }
+
                 /*
                 if (v == "collider" || v == 'pic') {
                     // console.log(this.#parent[v])
@@ -1113,9 +1127,11 @@ class __JEEObjPic {
     }
 
     boardsShow() {
-        const brd = this.#obj.border
+        let brd = this.#obj.border
+        if (this.#jee.border.on) brd = this.#jee.border
         if (!brd.color && !brd.width && !brd.type && !brd.field && !brd.txtFnc)
             return
+
         if (!brd.color) brd.color = "yellow"
         if (!brd.width) brd.width = 1
         if (!brd.type) brd.type = "line"
@@ -1266,8 +1282,8 @@ class __JEEObjBody {
     #right
     #top
     #bottom
-    #width = 0
-    #height = 0
+    // #width = 0
+    // #height = 0
     // #x = 0
     // #y = 0
     #setCollider() {
@@ -1293,7 +1309,7 @@ class __JEEObjBody {
         this.#top = obj.y + sizes.height / 2 + this.y
         this.#bottom = obj.y - sizes.height / 2 + this.y
         // console.log(this.getScope(), obj.x , sizes.width, this.x);
-        
+
     }
 
     getScope() {
@@ -1380,6 +1396,8 @@ class __JEEObjBody {
 
 
 
+
+
     // PHYSICS
 
     onGround = false
@@ -1400,6 +1418,7 @@ class __JEEObjBody {
         if (!this.#type || this.#type != "unit") return
         if (!this.#obj.active) return
         if (this.#obj.hidden) return
+        // console.log(this.#obj.name);
 
         const self = this.#obj
         let coll1 = self.body.getScope()
@@ -1417,38 +1436,37 @@ class __JEEObjBody {
             if (obj instanceof JEEObj &&
                 this.#obj.id != obj.id &&
                 obj.active && !obj.hidden &&
-                (obj.physics.type == "wall" || obj.physics.type == "unit")
-            ) {
+                (obj.body.type == "wall" || obj.body.type == "unit")) {
+
                 const coll2 = obj.body.getScope()
-                if (
-                    coll1.right > coll2.left &&
+                if (coll1.right > coll2.left &&
                     coll1.left < coll2.right &&
-                    coll1.top > coll2.bottom
-                ) {
+                    coll1.top > coll2.bottom) {
+
                     if (coll1.bottom < coll2.top) {
-                        let vxRight = coll2.left - coll1.right
-                        let vxLeft = coll2.right - coll1.left
-                        let vyTop = coll2.bottom - coll1.top
-                        let vyBottom = coll2.top - coll1.bottom
-                        if (Math.abs(vxRight) < Math.abs(vxLeft)) vxLeft = 0
-                        else vxRight = 0
-                        if (Math.abs(vyTop) < Math.abs(vyBottom)) vyBottom = 0
-                        else vyTop = 0
-                        let backX = vxRight + vxLeft
-                        let backY = vyTop + vyBottom
+                        let diffXR = coll2.left - coll1.right
+                        let diffXL = coll2.right - coll1.left
+                        let diffYT = coll2.bottom - coll1.top
+                        let diffYB = coll2.top - coll1.bottom
+                        if (Math.abs(diffXR) < Math.abs(diffXL)) diffXL = 0
+                        else diffXR = 0
+                        if (Math.abs(diffYT) < Math.abs(diffYB)) diffYB = 0
+                        else diffYT = 0
+                        let backX = diffXR + diffXL
+                        let backY = diffYT + diffYB
                         if (Math.abs(backX) < Math.abs(backY)) backY = 0
                         else backX = 0
-                        backs.push([backX, backY, obj.name])
+                        backs.push([backX, backY])
                     }
+
                     if (coll1.bottom - 1 < coll2.top) collsGrnd.push(coll2)
                 }
             }
 
+        // console.log(backs.length, JSON.stringify(backs));
+
         if (backs.length > 0) {
-            let nxR = 0,
-                nxL = 0,
-                nyT = 0,
-                nyB = 0
+            let nxR = 0, nxL = 0, nyT = 0, nyB = 0
             for (const m of backs) {
                 if (m[0] < nxR) nxR = m[0]
                 if (m[0] > nxL) nxL = m[0]
@@ -1467,12 +1485,10 @@ class __JEEObjBody {
 
         coll1 = self.body.getScope()
         for (const coll2 of collsGrnd) {
-            if (
-                coll1.right - 1 > coll2.left &&
+            if (coll1.right - 1 > coll2.left &&
                 coll1.left + 1 < coll2.right &&
                 coll1.top > coll2.bottom &&
-                coll1.bottom - 1 < coll2.top
-            ) {
+                coll1.bottom - 1 < coll2.top) {
                 this.onGround = true
             }
         }
