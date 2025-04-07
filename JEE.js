@@ -146,7 +146,6 @@ class JEE {
                 obj.__work()
                 if (obj.toDelete) {
                     if (obj.stop) obj.stop()
-                    // obj.active = false
                     md.push(i)
                 }
                 i++
@@ -176,7 +175,6 @@ class JEE {
                 if (obj instanceof JEEObj)
                     if (obj.z == z)
                         obj.pic.draw()
-        // obj.__draw()
     }
 
     #orderY(a, b) {
@@ -814,13 +812,8 @@ class JEEObj {
         this.update()
 
         this.#waitsWork()
-        // this.#setSize()
         this.body.__work()
-        // this.body.setCollider()
-        // console.log(this.name, this.physics)
 
-        // this.physics.__work()
-        // this.jee.setZLayer(this)
         // if (this.anglePic) this.rotation = this.angle
         if (this.cameraSnap) {
             this.jee.view.camera.x = this.x
@@ -834,41 +827,6 @@ class JEEObj {
 
         this.pic.draw()
     }
-
-
-
-    // #width = 0
-    // #height = 0
-    // #oldSizes = {}
-    // #setSize() {
-    //     let pic = this.pic.getPic()
-
-    //     if (this.#oldSizes.w == this.width &&
-    //         this.#oldSizes.h == this.height &&
-    //         this.#oldSizes.s == this.size &&
-    //         this.#oldSizes.p == pic) return
-
-    //     // if (this.width !== undefined) this.#width = this.width * this.size
-    //     // else if (pic && pic.width) this.#width = pic.width * this.size
-
-    //     // if (this.height !== undefined) this.#height = this.height * this.size
-    //     // else if (pic && pic.height) this.#height = pic.height * this.size
-
-    //     this.#oldSizes.w = this.width
-    //     this.#oldSizes.h = this.height
-    //     this.#oldSizes.s = this.size
-    //     this.#oldSizes.p = pic
-    //     // console.log(this.#oldSizes)
-    // }
-
-    // getSizes() {
-    //     return {
-    //         // picWidth: this.#picWidth,
-    //         // picHeight: this.#picHeight,
-    //         width: this.#width,
-    //         height: this.#height,
-    //     }
-    // }
 
     getFlip() {
         let ot = [1, 1]
@@ -884,6 +842,9 @@ class JEEObj {
 
         return ot
     }
+
+
+
 
     // MOVE
 
@@ -948,6 +909,10 @@ class JEEObj {
     }
     }
     */
+
+
+
+
 
     // WAIT
 
@@ -1040,7 +1005,6 @@ class __JEEObjPic {
     #obj
     #jee
 
-    // image
     flipX = false
     flipY = false
     alpha = 1
@@ -1278,6 +1242,14 @@ class __JEEObjBody {
         if (jee && jee instanceof JEE) this.#jee = jee
     }
 
+    getSizes() {
+        const s = this.#obj.pic.getSizes()
+        let w = s.width, h = s.height
+        if (this.width !== undefined) w = this.width * this.#obj.size
+        if (this.height !== undefined) h = this.height * this.#obj.size
+        return { width: w, height: h }
+    }
+
     #left
     #right
     #top
@@ -1286,13 +1258,24 @@ class __JEEObjBody {
     // #height = 0
     // #x = 0
     // #y = 0
-    #setCollider() {
-        // надо бы разделить на изменение размера и просто смену координат
+    #oldPrm = { x: null, y: null, size: null }
+    setCollider() {
         // if (this.#obj.nonContact) return
+
+        // перезадавать если сменились:
+        // x,y,size
+        // по остальным пока пофиг. Можно указать, что 
+        // надо при изменении параметров body в update()
+        // вызывать setCollider()
+        const obj = this.#obj
+        let re = false
+        if (this.#oldPrm.x != obj.x) re = true
+        if (this.#oldPrm.y != obj.y) re = true
+        if (this.#oldPrm.size != obj.size) re = true
+        if (!re) return
 
         // let sizes = this.#obj.getSizes()
         let sizes = this.getSizes()
-        const obj = this.#obj
 
         // this.#width = sizes.width
         // this.#height = sizes.height
@@ -1308,8 +1291,18 @@ class __JEEObjBody {
         this.#right = obj.x + sizes.width / 2 + this.x
         this.#top = obj.y + sizes.height / 2 + this.y
         this.#bottom = obj.y - sizes.height / 2 + this.y
-        // console.log(this.getScope(), obj.x , sizes.width, this.x);
 
+        // без этого спотыкается об углы на ровной стене из кубиков
+        // а с ним немного трясется при скольжении, но не застревает
+        this.#left = parseInt(this.#left)
+        this.#right = parseInt(this.#right)
+        this.#top = parseInt(this.#top)
+        this.#bottom = parseInt(this.#bottom)
+
+        // console.log(this.getScope(), obj.x , sizes.width, this.x);
+        this.#oldPrm.x = obj.x
+        this.#oldPrm.y = obj.y
+        this.#oldPrm.size = obj.size
     }
 
     getScope() {
@@ -1321,16 +1314,10 @@ class __JEEObjBody {
         }
     }
 
-    getSizes() {
-        const s = this.#obj.pic.getSizes()
-        let w = s.width, h = s.height
-        if (this.width !== undefined) w = this.width * this.#obj.size
-        if (this.height !== undefined) h = this.height * this.#obj.size
-        return { width: w, height: h }
-    }
+
 
     __work() {
-        this.#setCollider()
+        this.setCollider()
         this.#physicsWork()
     }
 
@@ -1413,7 +1400,6 @@ class __JEEObjBody {
     }
     get type() { return this.#type }
 
-
     #physicsWork() {
         if (!this.#type || this.#type != "unit") return
         if (!this.#obj.active) return
@@ -1425,7 +1411,7 @@ class __JEEObjBody {
 
         if (this.mass) {
             self.y += this.mass * this.gravVel
-            self.body.#setCollider()
+            self.body.setCollider()
         }
 
         this.onGround = false
@@ -1463,7 +1449,7 @@ class __JEEObjBody {
                 }
             }
 
-        // console.log(backs.length, JSON.stringify(backs));
+        // console.log(JSON.stringify(backs));
 
         if (backs.length > 0) {
             let nxR = 0, nxL = 0, nyT = 0, nyB = 0
@@ -1479,7 +1465,7 @@ class __JEEObjBody {
             if (nx != self.x || ny != self.y) {
                 self.x += nxL + nxR
                 self.y += nyT + nyB
-                self.body.#setCollider()
+                self.body.setCollider()
             }
         }
 
