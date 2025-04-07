@@ -2,7 +2,6 @@ console.log("JEE.js 1.5")
 
 
 var jee
-// setTimeout(() => (jee = new Jee()), 100)
 window.onload = () => jee = new Jee()
 
 class JEE {
@@ -117,25 +116,13 @@ class JEE {
             this.start()
         }
 
-        // if (this.log) {
-        //		 this.#consoleDiv.style.display = 'block'
-        //		 this.#consoleDiv.innerHTML = ''
-        // } else this.#consoleDiv.style.display = 'none'
-
-        // this.#mouseLjmgmp()
-        // this.#touchLjmgmp()
-
         this.#loopUpdate()
         this.#loopDraw()
-
-        // if (this.log) this.#ljmgmpLog()
 
         this.#fpsCount++
         this.#frame++
 
         this.control.pressOut()
-        // if (!this.isMobile) for (const k in this.press) this.press[k] = false
-        // else for (const k in this.touchS) this.touchS[k] = false
     }
 
     #loopUpdate() {
@@ -408,15 +395,8 @@ class __JEEView {
         if (this.canvasColor) this.canvas.style.backgroundColor = this.canvasColor
         if (this.cursorNone) this.canvas.style.cursor = "none"
         document.body.appendChild(this.canvas)
-        // this.context.textAlign = this.__defCtxText.textAlign
-        // this.context.font = '130px Arial'
-        // this.context.font = this.__defCtxText.fontWeight + ' ' +
-        //		 this.__defCtxText.fontSize + ' ' +
-        //		 this.__defCtxText.fontFamily
-        // console.log(this.context.font)
 
         if (this.canvasCss) this.canvas.style.cssText += this.canvasCss
-        // this.canvas.style.filter = this.canvasCss
     }
 
     // fullscreen() {
@@ -472,9 +452,9 @@ class __JEEView {
         this.hh = this.canvas.height / 2
         this.canvas.cpos = this.canvas.getBoundingClientRect()
         document.body.style.fontSize = this.fontRatio * (height / 40) + "px"
-        this.context.font =
+        this.context.font = // чтобы задать шрифт, надо перезадать размер канвасу
             this.__defCtxText.fontWeight +
-            " " + // чтобы задать шрифт, надо перезадать размер канвасу
+            " " + 
             this.__defCtxText.fontSize +
             "px " +
             this.__defCtxText.fontFamily
@@ -482,65 +462,6 @@ class __JEEView {
 
         const cpos = this.canvas.cpos
         const kh = cpos.height / this.canvasQuality
-        /*
-        document.querySelectorAll('.jee').forEach(el => {
-        el.style.position = 'absolute'
-        if (getComputedStyle(el).zIndex == 'auto') el.style.zIndex = 1
-        if (getComputedStyle(el).boxSizing == '')
-        el.style.boxSizing = 'border-box'
-        
-        let left = parseFloat(el.getAttribute('jee-left'))
-        let right = parseFloat(el.getAttribute('jee-right'))
-        let top = parseFloat(el.getAttribute('jee-top'))
-        let bottom = parseFloat(el.getAttribute('jee-bottom'))
-        let x = parseFloat(el.getAttribute('jee-x'))
-        let y = parseFloat(el.getAttribute('jee-y'))
-        let w = parseFloat(el.getAttribute('jee-width'))
-        let h = parseFloat(el.getAttribute('jee-height'))
-        
-        if (!isNaN(w)) el.style.width = (w * kh) + 'px'
-        if (!isNaN(h)) el.style.height = (h * kh) + 'px'
-        if (isNaN(x) && isNaN(right) && isNaN(left)) left = 0
-        if (isNaN(y) && isNaN(bottom) && isNaN(top)) top = 0
-        
-        const elPos = el.getBoundingClientRect()
-        if (!isNaN(left)) el.style.left = (cpos.left + left * kh) + 'px'
-        if (!isNaN(right)) el.style.right = (right * kh + innerWidth - cpos.width - cpos.left) + 'px'
-        if (!isNaN(top)) el.style.top = (cpos.top + top * kh) + 'px'
-        if (!isNaN(bottom)) el.style.bottom = (bottom * kh + innerHeight - cpos.height - cpos.top) + 'px'
-        if (!isNaN(x)) el.style.left = (cpos.left + this.hw * kh + x * kh) + 'px'
-        if (!isNaN(y)) el.style.top = (cpos.top + this.hh * kh - y * kh) + 'px'
-        
-        if (getComputedStyle(el).padding != '') {
-        if (!el.mgmPadding)
-        el.mgmPadding = parseInt(getComputedStyle(el).padding.replace('px', ''))
-        el.style.padding = (el.mgmPadding * kh) + 'px'
-        }
-        })
-        
-        this.#touchBtns.forEach(btn => {
-        const cpos = btn.el.getBoundingClientRect()
-        const left = cpos.left - this.canvas.cpos.left
-        const top = cpos.top - this.canvas.cpos.top
-        btn.x1 = left
-        btn.y1 = top
-        btn.x2 = left + cpos.width
-        btn.y2 = top + cpos.height
-        })
-        
-        this.#touchSticks.forEach(stick => {
-        const cpos = stick.el.getBoundingClientRect()
-        const left = cpos.left - this.canvas.cpos.left
-        const top = cpos.top - this.canvas.cpos.top
-        stick.x1 = left
-        stick.y1 = top
-        stick.x2 = left + cpos.width
-        stick.y2 = top + cpos.height
-        stick.px = left + 60
-        stick.py = top + 60
-        })
-        */
-        // if (this.objectsId > 0) this.#ljmgmpDraw()
     }
 }
 
@@ -586,10 +507,6 @@ class __JEEControl {
             this.mouse.up = true
             this.mouse.which = e.which
         }
-
-        // this.#jee.view.canvas.mouseenter = e => {
-        //		 console.log(e)
-        // }
     }
 
     #initKeys() {
@@ -598,11 +515,6 @@ class __JEEControl {
         this.press = { ...keyNames }
         this.pressK = {}
         const keyNums = { 38: "up", 40: "down", 37: "left", 39: "right", 32: "space", 13: "enter", 27: "escape", 16: "shift", 17: "ctrl", 8: "backspace", 65: "a", 66: "b", 67: "c", 68: "d", 69: "e", 70: "f", 71: "g", 72: "h", 73: "i", 74: "j", 75: "k", 76: "l", 77: "m", 78: "n", 79: "o", 80: "p", 81: "q", 82: "r", 83: "s", 84: "t", 85: "u", 86: "v", 87: "w", 88: "x", 89: "y", 90: "z", 48: "n0", 49: "n1", 50: "n2", 51: "n3", 52: "n4", 53: "n5", 54: "n6", 55: "n7", 56: "n8", 57: "n9", }
-        // for (const j in keyNums) this.keys[keyNums[j]] = false
-        // for (const j in keyNums) this.press[keyNums[j]] = false
-        // let a = {}
-        // for (const j in keyNums) a[keyNums[j]] = false
-        // console.log(JSON.stringify(a))
 
         document.onkeydown = (e) => {
             e = e || window.event
@@ -620,12 +532,6 @@ class __JEEControl {
             e = e || window.event
             this.keys[keyNums[e.keyCode]] = false
         }
-    }
-
-    pressOut() {
-        // ???
-        if (!this.isMobile) for (const k in this.press) this.press[k] = false
-        // else for (const k in this.touchS) this.touchS[k] = false
     }
 }
 
@@ -680,15 +586,7 @@ class JEEObj {
     get z() { return this.#z }
     active = true
     hidden = false
-    /** Array url images */
-    // pics = []
-    // picsData = []
-    // picNum = 0
-    // imgX = 0
-    // imgY = 0
     size = 1
-    // width
-    // height
     isClone = false
     cameraZ = 1
     border = {
@@ -725,20 +623,14 @@ class JEEObj {
         this.jee.setZLayer(this)
         this.pic.__init()
 
-        // for (let pic of this.pic.list)
-        //     this.pic.listData.push(this.jee.files.load(pic))
-        // for (let pic of this.pics) this.picsData.push(this.jee.files.load(pic))
-        // if (this.segPics.file) this.segPics.fileData = this.jee.files.load(this.segPics.file)
-
         this.ready = true
     }
 
     #initClone(parent) {
         // console.log(parent)
         // console.log('|||||| CLONE ||||||')
-
-        if (parent instanceof JEEObj) this.#parent = parent
-        else return
+        this.#parent = parent
+        if (!(this.#parent instanceof JEEObj)) return 
 
         this.body = new __JEEObjBody(this)
         this.pic = new __JEEObjPic(this)
@@ -752,35 +644,26 @@ class JEEObj {
                     v == 'border'
                 ) {
                     for (const c in this.#parent[v]) {
-                        // console.log(v, c, this.#parent[v][c])
+                        // if (this.name == 'Flower')
+                        //     console.log(v, c, this.#parent[v][c])
+
                         this[v][c] = this.#parent[v][c]
                     }
+
                     if (v == 'body') // get set
                         this.body.type = this.#parent.body.type
+
+                    if (v == 'pic') {
+                        if (this.#parent.pic.animName) {
+                            this.pic.animName = this.#parent.pic.animName
+                            this.pic.animSpeed = this.#parent.pic.animSpeed
+                        }
+                    }
                 }
                 else {
                     if (this.#parent[v] !== undefined)
                         this[v] = JSON.parse(JSON.stringify(this.#parent[v]))
                 }
-
-                /*
-                if (v == "collider" || v == 'pic') {
-                    // console.log(this.#parent[v])
-                    for (const c in this.#parent[v]) {
-                        // console.log(c)
-                        this[v][c] = this.#parent[v][c]
-                    }
-                    // } else if (v == "physics") {
-                    //     this.physics.mass = this.#parent.physics.mass
-                    //     this.physics.type = this.#parent.physics.type
-                } else {
-                    // console.log(v, this.#parent[v])
-                    if (v == "pics" || v == "picsData" || v == "border")
-                        this[v] = this.#parent[v]
-                    else if (this.#parent[v])
-                        this[v] = JSON.parse(JSON.stringify(this.#parent[v]))
-                }
-                    */
             }
 
         this.isClone = true
@@ -794,7 +677,7 @@ class JEEObj {
     /** Run in every frame */
     update() { }
 
-    clone() {
+    clone() { // ,,,
         // console.log(this.name, this.constructor);
         if (this instanceof JEEObj)
             return new this.constructor(this)
@@ -881,7 +764,6 @@ class JEEObj {
         if (keys.s && keys.d) angle = 135
         if (keys.s && keys.a) angle = -135
 
-        // if (keys.w || keys.s || keys.a || keys.d) this.stepA(speed, angle)
         if (angle !== undefined) this.stepA(speed, angle)
 
         return angle
@@ -920,7 +802,6 @@ class JEEObj {
     #waitsWork() {
         for (const j in this.#wait) {
             const wait = this.#wait[j]
-            // console.log(wait.n, this.name)
             if (wait.n == 0) {
                 if (wait.repeat) wait.n = wait.frames - 1
                 else delete this.#wait[j]
@@ -931,7 +812,6 @@ class JEEObj {
 
     /** Do func() after few frames. Set name if you need to stop, or set name = ''. To stop set name and frames = null. */
     wait(name, frames, func) {
-        // зачем имя? Может останавливать?
         if (frames == null) delete this.#wait[name]
         else if (!this.#wait[name]) {
             this.#wait[name] = {}
@@ -1012,7 +892,8 @@ class __JEEObjPic {
     width
     height
 
-
+    /** List parts of image. Format: [[x, y, width, height, picNum = 0],...] */
+    parts = []
 
     constructor(obj) {
         if (obj instanceof JEEObj) this.#obj = obj
@@ -1029,6 +910,8 @@ class __JEEObjPic {
     draw() {
         if (!this.#obj.active) return
         if (this.#obj.hidden) return
+
+        this.#animaWork()
 
         let obj = this.#obj
         let context = this.#jee.view.context
@@ -1059,30 +942,41 @@ class __JEEObjPic {
         context.scale(flip[0], flip[1])
         if (obj.effect) context.filter = obj.effect // ???
 
-        const pic = this.getPic()
+        // const pic = this.getPic()
         const sizes = this.getSizes()
-        if (pic) {
-            // console.log(-sizes.width / 2 + obj.imgX * obj.size);
-            context.drawImage(
-                pic,
-                -sizes.width / 2 + this.x * obj.size,
-                -sizes.height / 2 - this.y * obj.size,
-                sizes.width, sizes.height
-            )
-            // context.drawImage(
-            //     pic,
-            //     -sizes.width / 2 + obj.imgX * obj.size,
-            //     -sizes.height / 2 - obj.imgY * obj.size,
-            //     sizes.width, sizes.height
-            // )
+        if (this.parts.length == 0) {
+            const pic = this.filesData[this.num]
+            if (pic)
+                context.drawImage(pic,
+                    -sizes.width / 2 + this.x * obj.size,
+                    -sizes.height / 2 - this.y * obj.size,
+                    sizes.width, sizes.height
+                )
         }
+        else {
+            const picPrm = this.parts[this.num]
+            let n = 0
+            if (picPrm.length == 5) n = picPrm[4]
+            const pic = this.filesData[n]
+            if (pic) {
+                const w = picPrm[2]
+                const h = picPrm[3]
+                // console.log(this.num, picPrm);
 
+                context.drawImage(pic,
+                    picPrm[0], picPrm[1],
+                    w, h,
+                    -w / 2 + this.x * obj.size,
+                    -h / 2 - this.y * obj.size,
+                    w, h
+                )
+            }
+        }
         // this.drawPrimitives(1)
 
         context.restore()
 
         this.boardsShow()
-        // if (jee.params.borders && !this.nocont) this.#boardsShow(jee.params.borders)
     }
 
     dot(x, y, col = "#ff0") {
@@ -1142,10 +1036,6 @@ class __JEEObjPic {
         }
     }
 
-    // log(txt) {
-    //		 jee.view.context.fillText(txt, this.obj.x, this.obj.y + 50)
-    // }
-
     /** List url image files */
     files = []
     filesData = []
@@ -1164,12 +1054,8 @@ class __JEEObjPic {
             ])
     }
 
-    getPic() {
-        return this.filesData[this.num]
-    }
-
     getSizes() {
-        const pic = this.getPic()
+        const pic = this.filesData[this.num]
         let w = 0, h = 0
 
         if (pic) {
@@ -1185,34 +1071,46 @@ class __JEEObjPic {
         return { width: w, height: h }
     }
 
-    #animaWork(start) {
-        if (!this._anima) return
-        if (!this._anima.name) return
-        if (this._drawing) {
-            if (this._anima.sch == 0) {
-                this._anima.sch = this.anim.speed - 1
-                this._anima.frame++
-                if (this._anima.frame >= this._anima.length) this._anima.frame = 0
-                this.picName = this._anima.pics[this._anima.frame]
-            } else this._anima.sch--
-        }
+
+    /** Animation. Format: {name: [list pic numbers of files or parts]} */
+    anim = {}
+
+    #anima = {
+        name: '',
+        num: 0,
+        frame: 0,
+        speed: 1,
+        pics: [],
+        length: 0,
+    }
+    set animName(val) {
+        if (this.#anima.name == val) return
+        if (!this.anim[val]) return
+
+        this.#anima.name = val
+        this.#anima.frame = 0
+        this.#anima.pics = this.anim[val]
+        this.#anima.length = this.anim[val].length
+        this.#anima.num = this.#anima.speed
+        this.num = this.#anima.pics[this.#anima.frame]
+    }
+    get animName() { return this.#anima.name }
+    set animSpeed(val) { this.#anima.speed = val }
+    get animSpeed() { return this.#anima.speed }
+    #animaWork() {
+        if (!this.#anima.name) return
+
+        if (this.#anima.num == 0) {
+            this.#anima.num = this.#anima.speed
+            this.#anima.frame++
+            if (this.#anima.frame >= this.#anima.length) this.#anima.frame = 0
+            this.num = this.#anima.pics[this.#anima.frame]
+        } else this.#anima.num--
     }
 
-    setAnim(name, frame = 0) {
-        if (!this._anima) return
-        if (name == 'speed') return
-        if (name == this._anima.name) return
-        this._anima.name = name
-        this._anima.frame = frame
-        this._anima.pics = this.anim[name]
-        this._anima.length = this.anim[name].length
-        this.picName = this._anima.pics[frame]
-        this._anima.sch = this.anim.speed - 1
-    }
 
-    getAnim() {
-        return this._anima.name
-    }
+
+
 }
 
 
@@ -1254,10 +1152,6 @@ class __JEEObjBody {
     #right
     #top
     #bottom
-    // #width = 0
-    // #height = 0
-    // #x = 0
-    // #y = 0
     #oldPrm = { x: null, y: null, size: null }
     setCollider() {
         // if (this.#obj.nonContact) return
@@ -1274,18 +1168,7 @@ class __JEEObjBody {
         if (this.#oldPrm.size != obj.size) re = true
         if (!re) return
 
-        // let sizes = this.#obj.getSizes()
         let sizes = this.getSizes()
-
-        // this.#width = sizes.width
-        // this.#height = sizes.height
-        // if (this.width !== undefined) this.#width = this.width * obj.size
-        // if (this.height !== undefined) this.#height = this.height * obj.size
-
-        // if (this.x != undefined) this.#x = this.x
-        // if (this.y != undefined) this.#y = this.y
-
-        // console.log(sizes)
 
         this.#left = obj.x - sizes.width / 2 + this.x
         this.#right = obj.x + sizes.width / 2 + this.x
@@ -1294,12 +1177,21 @@ class __JEEObjBody {
 
         // без этого спотыкается об углы на ровной стене из кубиков
         // а с ним немного трясется при скольжении, но не застревает
-        this.#left = parseInt(this.#left)
-        this.#right = parseInt(this.#right)
-        this.#top = parseInt(this.#top)
-        this.#bottom = parseInt(this.#bottom)
+        // this.#left = parseInt(this.#left)
+        // this.#right = parseInt(this.#right)
+        // this.#top = parseInt(this.#top)
+        // this.#bottom = parseInt(this.#bottom)
 
-        // console.log(this.getScope(), obj.x , sizes.width, this.x);
+        // this.#left = parseFloat(this.#left.toFixed(3))
+        // this.#right = parseFloat(this.#right.toFixed(3))
+        // this.#top = parseFloat(this.#top.toFixed(3))
+        // this.#bottom = parseFloat(this.#bottom.toFixed(3))
+
+        this.#left = Math.round(this.#left * 1000) / 1000
+        this.#right = Math.round(this.#right * 1000) / 1000
+        this.#top = Math.round(this.#top * 1000) / 1000
+        this.#bottom = Math.round(this.#bottom * 1000) / 1000
+
         this.#oldPrm.x = obj.x
         this.#oldPrm.y = obj.y
         this.#oldPrm.size = obj.size
@@ -1325,7 +1217,7 @@ class __JEEObjBody {
         if (!(_obj instanceof JEEObj)) return
         if (_obj.nonContact) return
         if (this.#obj.id == _obj.id) return
-        if (!this.#obj.nonContact) return
+        if (this.#obj.nonContact) return
         if (!this.#obj.active) return
         if (this.#obj.hidden) return
 
@@ -1404,7 +1296,6 @@ class __JEEObjBody {
         if (!this.#type || this.#type != "unit") return
         if (!this.#obj.active) return
         if (this.#obj.hidden) return
-        // console.log(this.#obj.name);
 
         const self = this.#obj
         let coll1 = self.body.getScope()
@@ -1488,6 +1379,10 @@ class __JEEObjBody {
     jump(val) {
         if (this.onGround) this.gravVel = val
     }
+
+
+
+    
 }
 
 
