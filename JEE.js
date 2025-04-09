@@ -121,8 +121,6 @@ class JEE {
 
         this.#fpsCount++
         this.#frame++
-
-        this.control.pressOut()
     }
 
     #loopUpdate() {
@@ -195,14 +193,44 @@ class JEE {
     getObj(key, prm) {
         for (const obj of this.objects)
             if (obj instanceof JEEObj && obj.active)
-                if (obj[key] == prm) return obj
+                if (obj[key] == prm)
+                    return obj
     }
     getObjs(key, prm) {
         let ot = []
         for (const obj of this.objects)
             if (obj instanceof JEEObj)
-                if (obj.active && obj[key] == prm) ot.push(obj)
-
+                if (obj.active && obj[key] == prm)
+                    ot.push(obj)
+        return ot
+    }
+    getObj2() {
+        for (const obj of this.objects)
+            if (obj instanceof JEEObj && obj.active) {
+                let n = 0
+                for (const i in arguments) {
+                    const key = arguments[i][0]
+                    const prm = arguments[i][1]
+                    if (obj[key] == prm) n++
+                }
+                if (arguments.length == n)
+                    return obj
+            }
+    }
+    getObjs2() {
+        // console.log(arguments.length);
+        let ot = []
+        for (const obj of this.objects)
+            if (obj instanceof JEEObj && obj.active) {
+                let n = 0
+                for (const i in arguments) {
+                    const key = arguments[i][0]
+                    const prm = arguments[i][1]
+                    if (obj[key] == prm) n++
+                }
+                if (arguments.length == n)
+                    ot.push(obj)
+            }
         return ot
     }
 
@@ -263,6 +291,14 @@ class JEE {
         },
     }
 }
+
+
+
+
+
+
+
+
 
 class __JEEView {
     #jee
@@ -454,7 +490,7 @@ class __JEEView {
         document.body.style.fontSize = this.fontRatio * (height / 40) + "px"
         this.context.font = // чтобы задать шрифт, надо перезадать размер канвасу
             this.__defCtxText.fontWeight +
-            " " + 
+            " " +
             this.__defCtxText.fontSize +
             "px " +
             this.__defCtxText.fontFamily
@@ -591,6 +627,7 @@ class JEEObj {
     cameraZ = 1
     border = {
         width: null,
+        /** @type {jBodyType} */
         type: null,
         color: null,
         txtFnc: null,
@@ -619,7 +656,7 @@ class JEEObj {
         this.name = this.constructor.name
         // console.log(">>>>>>> ORIG >>>>>>>>>>", this.name)
 
-        this.init()
+        if (this.init) this.init()
         this.jee.setZLayer(this)
         this.pic.__init()
 
@@ -630,7 +667,7 @@ class JEEObj {
         // console.log(parent)
         // console.log('|||||| CLONE ||||||')
         this.#parent = parent
-        if (!(this.#parent instanceof JEEObj)) return 
+        if (!(this.#parent instanceof JEEObj)) return
 
         this.body = new __JEEObjBody(this)
         this.pic = new __JEEObjPic(this)
@@ -677,11 +714,10 @@ class JEEObj {
     /** Run in every frame */
     update() { }
 
-    clone() { // ,,,
-        // console.log(this.name, this.constructor);
-        if (this instanceof JEEObj)
-            return new this.constructor(this)
-    }
+    // contactIn = null
+    // contactOut = null
+
+
 
     #startFrame
     __work() {
@@ -689,13 +725,15 @@ class JEEObj {
         // console.log('========' + this.name + '=========')
         if (!this.#startFrame) {
             this.#startFrame = true
-            this.start()
+            if (this.start) this.start()
         }
         // else
-        this.update()
+        if (this.update) this.update()
 
         this.#waitsWork()
         this.body.__work()
+        // this.body.setCollider()
+        // this.body.physicsWork()
 
         // if (this.anglePic) this.rotation = this.angle
         if (this.cameraSnap) {
@@ -711,20 +749,26 @@ class JEEObj {
         this.pic.draw()
     }
 
-    getFlip() {
-        let ot = [1, 1]
-
-        if (this.flipX)
-            if (this.angle > 0) ot[0] = 1
-            else ot[0] = -1
-        if (this.flipY)
-            if (this.angle > 0 && this.angle < 90)
-                // ???
-                ot[1] = 1
-            else ot[1] = -1
-
-        return ot
+    /** Clone self object. Does not return class type. */
+    clone() {
+        if (this instanceof JEEObj)
+            return new this.constructor(this)
     }
+
+    // getFlip() {
+    //     let ot = [1, 1]
+
+    //     if (this.flipX)
+    //         if (this.angle > 0) ot[0] = 1
+    //         else ot[0] = -1
+    //     if (this.flipY)
+    //         if (this.angle > 0 && this.angle < 90)
+    //             // ???
+    //             ot[1] = 1
+    //         else ot[1] = -1
+
+    //     return ot
+    // }
 
 
 
@@ -864,7 +908,6 @@ class JEEObj {
     }
 
 
-
 }
 
 
@@ -885,8 +928,8 @@ class __JEEObjPic {
     #obj
     #jee
 
-    flipX = false
-    flipY = false
+    flipX = 1
+    flipY = 1
     alpha = 1
     rotation = 0
     width
@@ -938,8 +981,9 @@ class __JEEObjPic {
         if (obj.alpha !== undefined) context.globalAlpha = obj.alpha
         else context.globalAlpha = 1
         if (this.rotation != 0) context.rotate((this.rotation * Math.PI) / 180)
-        const flip = obj.getFlip()
-        context.scale(flip[0], flip[1])
+        // const flip = obj.getFlip()
+        // context.scale(flip[0], flip[1])
+        context.scale(this.flipX, this.flipY)
         if (obj.effect) context.filter = obj.effect // ???
 
         // const pic = this.getPic()
@@ -1135,6 +1179,7 @@ class __JEEObjBody {
     angle = 0
 
 
+
     constructor(obj) {
         if (obj instanceof JEEObj) this.#obj = obj
         if (jee && jee instanceof JEE) this.#jee = jee
@@ -1210,7 +1255,65 @@ class __JEEObjBody {
 
     __work() {
         this.setCollider()
+        this.#contactsWork()
         this.#physicsWork()
+    }
+
+
+    contactor = {
+        // on: true,
+        listObjId: [],
+        enterList: [],
+        exitList: [],
+        enter: (key, prm, fn = null) => {
+            for (const obj of this.contactor.enterList)
+                if (obj[key] == prm) {
+                    if (fn) fn(obj)
+                    return obj
+                }
+        },
+        exit: (key, prm, fn = null) => {
+            for (const obj of this.contactor.exitList)
+                if (obj[key] == prm) {
+                    if (fn) fn(obj)
+                    return obj
+                }
+        }
+    }
+    #contactsWork() {
+        if (!this.contactor.on) return
+        const self = this.#obj
+        if (!self.active) return
+        if (self.hidden) return
+        if (self.nonContact) return
+
+        this.contactor.enterList = []
+        this.contactor.exitList = []
+
+        for (const obj of jee.objects)
+            if (obj instanceof JEEObj &&
+                !obj.nonContact &&
+                obj.active &&
+                !obj.hidden &&
+                obj.id !== self.id
+            ) {
+                const coll2 = obj.body.getScope()
+                const i = this.contactor.listObjId.indexOf(obj.id)
+                if (this.#top + 1 > coll2.bottom &&
+                    this.#bottom - 1 < coll2.top &&
+                    this.#right + 1 > coll2.left &&
+                    this.#left - 1 < coll2.right) {
+                    if (i == -1) {
+                        this.contactor.listObjId.push(obj.id)
+                        this.contactor.enterList.push(obj)
+                    }
+                } else {
+                    if (i >= 0) {
+                        this.contactor.listObjId.splice(i, 1)
+                        this.contactor.exitList.push(obj)
+                    }
+                }
+            }
     }
 
     contactObj(_obj, inside, key, val) {
@@ -1257,7 +1360,8 @@ class __JEEObjBody {
         if (this.#obj.nonContact) return
 
         for (const obj of jee.objects)
-            if ((res = this.contactObj(obj, inside, key, val))) return res
+            if ((res = this.contactObj(obj, inside, key, val)))
+                return res
     }
 
     contacts(key, val, inside) {
@@ -1284,7 +1388,10 @@ class __JEEObjBody {
     mass = 0
 
     #type
-    /** undefined / 'wall' / 'unit' / 'free' */
+    /** Type physics body. undefined / 'wall' / 'unit' / 'free' 
+     * @type {bodyType}
+     * @default undefined
+    */
     set type(val) {
         this.#type = val
         if (val) this.#jee.physics.add(this.#obj)
@@ -1382,13 +1489,20 @@ class __JEEObjBody {
 
 
 
-    
+
 }
 
 
+var jBodyType = {
+    wall: 'wall',
+    unit: 'unit',
+    free: 'free',
+}
 
 
-
-
+var jBorderType = {
+    line: 'line',
+    dots: 'dots',
+}
 
 
