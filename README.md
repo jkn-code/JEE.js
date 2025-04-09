@@ -6,9 +6,11 @@ ______
 
 Проект находится в разработке
 
+______
 
 Цель: сделать максимально простой движок для создания игр. Запуск делается просто созданием файлов `index.html`, `game.js`, и подключения к ним `JEE.js` для использования двух классов для наследования `JEE` для игры, и `JEEObj` для создания юнитов. Не используется никакого специального js-подключения типа import или require, для появления подсказок при настройке наследуемых классов, надо просто чтобы в редакторе (VS Code) был открыт и файл `JEE.js`.
 
+______
 
 Пример:
 ```javascript
@@ -24,7 +26,7 @@ var Star = class extends JEEObj {
     dir = 1
 
     init() {
-        this.pic.files = ['images/star.png']
+        this.pic.files = ['images/star.png', 'images/star2.png']
         this.x = this.jee.randomW(200)
         this.y = 300
         this.body.height = 50
@@ -33,8 +35,9 @@ var Star = class extends JEEObj {
     }
 
     start() {
-        this.speed = this.jee.random(1, 10)
+        this.speed = this.jee.random(5, 10)
         this.dir = this.jee.random(-1)
+        this.pic.num = this.jee.random(0, 1)
     }
 
     update() {
@@ -46,6 +49,7 @@ var Star = class extends JEEObj {
             this.x = this.jee.randomW(200)
             this.speed = this.jee.random(1, 10)
             this.dir = this.jee.random(-1)
+            this.pic.num = this.jee.random(0, 1)
         }
     }
 }
