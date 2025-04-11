@@ -35,6 +35,11 @@ class JEE {
     }
     #isMobile
     get isMobile() { return this.#isMobile }
+    log = {
+        on: false,
+        show: txt => this.#logList.push(txt)
+    }
+    #logList = []
 
     view = new __JEEView(this)
     control = new __JEEControl(this)
@@ -69,7 +74,8 @@ class JEE {
     }
 
     #fpsTime
-    #fpsCount
+    #fpsCount = 0
+    #fps = 0
     #startGame() {
         console.log("::: start jee")
 
@@ -86,6 +92,13 @@ class JEE {
         //		 document.querySelector('.jee-plane').style.display = 'block'
         // this.view.resizeWin()
         this.RUN = true
+
+        this.#fps = 0
+        this.#fpsCount = 0
+        setInterval(() => {
+            this.#fps = this.#fpsCount
+            this.#fpsCount = 0
+        }, 1000)
 
         setTimeout(() => {
             this.view.curtain.style.display = "none"
@@ -121,6 +134,7 @@ class JEE {
         if (this.inActPause) return
         if (this.inRunPause) return
         if (!this.RUN) return
+        this.#logList = []
 
         if (!this.#startFrame) {
             this.#startFrame = true
@@ -130,6 +144,7 @@ class JEE {
         this.#touchWork()
         this.#loopUpdate()
         this.#loopDraw()
+        this.#logWork()
 
         this.#fpsCount++
         this.#frame++
@@ -183,8 +198,10 @@ class JEE {
     #touchWork() {
         if (!this.#isMobile) return
         // console.log(this.control.touches);
-        for (const btn of this.control.mobile) 
+        for (const btn of this.control.mobile)
             btn.down = false
+
+        // this.log.show('>>> ' + this.control.touches.length)
 
         for (const t of this.control.touches) {
             // console.log(t.clientX, t.pageX, t.screenX);
@@ -206,13 +223,22 @@ class JEE {
                 ) {
                     // console.log('xxxxxxxxxxxxx');
                     btn.down = true
-                } else
-                    btn.down = false
+                }
+                // else btn.down = false
             }
         }
     }
 
+    #logWork() {
+        if (!this.log.on) return
 
+        this.view.consoleDiv.innerHTML = `
+            fps: ${this.#fps} <br>
+            objects: ${this.objects.length} <hr>
+            ${this.#logList.join('<br>')}
+        `
+        this.#logList = []
+    }
 
 
 
@@ -394,7 +420,7 @@ class __JEEView {
         window.onresize = () => this.resizeWin()
     }
 
-    #consoleDiv
+    consoleDiv
     #initHTML() {
         let viewPortTag = document.createElement("meta")
         viewPortTag.id = "viewport"
@@ -423,9 +449,9 @@ class __JEEView {
                 }
             </style>
             `
-        /*
-        this.#consoleDiv = document.createElement("div") // ???
-        this.#consoleDiv.style.cssText = `
+
+        this.consoleDiv = document.createElement("div")
+        this.consoleDiv.style.cssText = `
             position: absolute ;
             z-index: 999 ;
             top: 0px ;
@@ -435,7 +461,7 @@ class __JEEView {
             min-width: 150px;
             overflow-y: auto ;
             opacity: 0.7 ;
-            display: ${this.log ? "block" : "none"};
+            display: ${this.#jee.log.on ? "block" : "none"};
             padding: 10px;
             font-size: 11px ;
             color: #000;
@@ -444,8 +470,8 @@ class __JEEView {
             pointer-events: none;
             border-radius: 0 0 5px 0;
             `
-        document.body.appendChild(this.#consoleDiv)
-        */
+        document.body.appendChild(this.consoleDiv)
+
 
         if (this.#jee.name) document.title = this.#jee.name
 
@@ -1257,35 +1283,53 @@ class __JEEObjPic {
         if (!this.#obj.active) return
         if (this.#obj.hidden) return
 
+        const view = this.#jee.view
+        const zoom = view.zoom
+        const obj = this.#obj
+        const sizes = this.getSizes()
+        const objX = obj.x * zoom
+        const objY = obj.y * zoom
+        const camX = view.camera.x * zoom
+        const camY = view.camera.y * zoom
+        let w = sizes.width * zoom
+        let h = sizes.height * zoom
+        const picPrm = this.parts[this.num]
+        if (this.parts.length > 0) {
+            w = picPrm[2] * zoom
+            h = picPrm[3] * zoom
+        }
+        const w2 = w / 2
+        const h2 = h / 2
+
+        if (objX - w2 > camX + view.hw ||
+            objX + w2 < camX - view.hw ||
+            objY - h2 > camY + view.hh ||
+            objY + h2 < camY - view.hh) return
+
         this.#animaWork()
 
-        const obj = this.#obj
-        const context = this.#jee.view.context
-        const zoom = this.#jee.view.zoom
-
-        context.save()
-        context.translate(
-            obj.x * zoom + this.#jee.view.hw + -this.#jee.view.camera.x * zoom * obj.cameraZ,
-            -obj.y * zoom + this.#jee.view.hh + this.#jee.view.camera.y * zoom * obj.cameraZ
+        view.context.save()
+        view.context.translate(
+            obj.x * zoom + view.hw + -camX * obj.cameraZ,
+            -obj.y * zoom + view.hh + camY * obj.cameraZ
         )
 
-        if (obj.alpha !== undefined) context.globalAlpha = obj.alpha
-        else context.globalAlpha = 1
+        if (obj.alpha !== undefined) view.context.globalAlpha = obj.alpha
+        else view.context.globalAlpha = 1
 
         if (this.rotation != 0) context.rotate((this.rotation * Math.PI) / 180)
 
         // const flip = obj.getFlip()
         // context.scale(flip[0], flip[1])
-        context.scale(this.flipX, this.flipY)
-        if (obj.effect) context.filter = obj.effect // ???
+        view.context.scale(this.flipX, this.flipY)
+        if (obj.effect) view.context.filter = obj.effect // ???
 
-        const sizes = this.getSizes()
         if (this.parts.length == 0) {
             const pic = this.filesData[this.num]
             if (pic) {
-                const w = sizes.width * zoom
-                const h = sizes.height * zoom
-                context.drawImage(pic,
+                // const w = sizes.width * zoom
+                // const h = sizes.height * zoom
+                view.context.drawImage(pic,
                     -w / 2 + this.x * obj.size,
                     -h / 2 - this.y * obj.size,
                     w, h
@@ -1293,14 +1337,14 @@ class __JEEObjPic {
             }
         }
         else {
-            const picPrm = this.parts[this.num]
+            // const picPrm = this.parts[this.num]
             let n = 0
             if (picPrm.length == 5) n = picPrm[4]
             const pic = this.filesData[n]
             if (pic) {
-                const w = picPrm[2] * zoom
-                const h = picPrm[3] * zoom
-                context.drawImage(pic,
+                // const w = picPrm[2] * zoom
+                // const h = picPrm[3] * zoom
+                view.context.drawImage(pic,
                     picPrm[0], picPrm[1],
                     picPrm[2], picPrm[3],
                     -w / 2 + this.x * obj.size,
@@ -1310,7 +1354,7 @@ class __JEEObjPic {
             }
         }
 
-        context.restore()
+        view.context.restore()
 
         this.boardsShow()
     }
@@ -1334,8 +1378,8 @@ class __JEEObjPic {
         const context = view.context
         const body = this.#obj.body
         const scope = body.getScope()
-        const cameraZx = -this.#jee.view.camera.x * obj.cameraZ
-        const cameraZy = this.#jee.view.camera.y * obj.cameraZ
+        const cameraZx = -this.#jee.view.camera.x * this.#obj.cameraZ
+        const cameraZy = this.#jee.view.camera.y * this.#obj.cameraZ
 
         const left = scope.left + view.hw + cameraZx
         const right = scope.right + view.hw + cameraZx
