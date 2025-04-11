@@ -4,9 +4,12 @@ console.log("JEE.js 1.5")
 var jee
 window.onload = () => jee = new Jee()
 
+
 class JEE {
-    static _ = {}
+    // static _ = {}
+    /** List of game objects */
     objects = []
+    /** Game objects counter */
     objsId = 0
     #zList = []
     #frame = 0
@@ -16,25 +19,30 @@ class JEE {
 
     name = "JEE Game"
 
-    /** 2.5D game */
+    /** For 2.5D game */
     orderY = false
     fpsLimit = 63
-    fullscreen = false
-    autorun = true
+    // fullscreen = false // ???
+    // autorun = true // ???
     loadPause = 0.5
     border = {
         width: null,
+        /** @type {jBodyType} */
         type: null,
         color: null,
         txtFnc: null,
         field: null,
     }
+    #isMobile
+    get isMobile() { return this.#isMobile }
 
     view = new __JEEView(this)
     control = new __JEEControl(this)
     files = new __JEEResource(this)
 
     constructor() {
+        this.#isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
         this.init()
 
         this.view.__init()
@@ -46,16 +54,18 @@ class JEE {
     #init() {
         for (const name in window) {
             const obj = window[name]
-            if (obj && obj.prototype instanceof JEEObj) new obj(true)
+            if (obj && obj.prototype instanceof JEEObj)
+                new obj(true)
         }
 
         let wait = setInterval(() => {
-            this.view.curtainIn.innerHTML = `<b>JEE.js</b><br><small>${this.files.ok}/${this.files.all}</small>`
+            this.view.curtainIn.querySelector('span:nth-of-type(1)').innerHTML = this.files.ok
+            this.view.curtainIn.querySelector('span:nth-of-type(2)').innerHTML = this.files.all
             if (this.files.all == this.files.ok) {
                 clearInterval(wait)
                 setTimeout(() => this.#startGame(), this.loadPause * 1000)
             }
-        }, 100)
+        }, 10)
     }
 
     #fpsTime
@@ -68,12 +78,13 @@ class JEE {
         if (this.border.color || this.border.field || this.border.txtFnc || this.border.type || this.border.width)
             this.border.on = true
 
+
         // if (this.fullscreen && this.autorun === false)
         //		 this.#toggleFullScreen()
-        this.view.curtainIn.innerHTML = ""
+        this.view.curtain.style.display = 'none'
         // if (document.querySelector('.jee-plane')) // ??? фиг знает что это. может для редактора карты
         //		 document.querySelector('.jee-plane').style.display = 'block'
-        this.view.resizeWin()
+        // this.view.resizeWin()
         this.RUN = true
 
         setTimeout(() => {
@@ -116,6 +127,7 @@ class JEE {
             this.start()
         }
 
+        this.#touchWork()
         this.#loopUpdate()
         this.#loopDraw()
 
@@ -167,6 +179,49 @@ class JEE {
         if (a.y > b.y) return -1
         return 0
     }
+
+    #touchWork() {
+        if (!this.#isMobile) return
+        // console.log(this.control.touches);
+        for (const btn of this.control.mobile) 
+            btn.down = false
+
+        for (const t of this.control.touches) {
+            // console.log(t.clientX, t.pageX, t.screenX);
+            for (const btn of this.control.mobile) {
+                // const rect = btn.body.getBoundingClientRect();
+                // console.log(btn.body, btn.cpos);
+                // btn.body.remove()
+
+                // console.log(btn.body, btn.body.getBoundingClientRect());
+
+                // const dist = this.distanceXY(t.clientX, t.clientY, btn.cpos.left, btn.cpos.top)
+                // console.log(btn.cpos, t.clientX, btn.cpos.left, dist);
+                // console.log(t, btn.cpos);
+                // console.log(t.clientY, btn.cpos.top);
+                if (t.clientX > btn.cpos.left &&
+                    t.clientX < btn.cpos.right &&
+                    t.clientY > btn.cpos.top &&
+                    t.clientY < btn.cpos.bottom
+                ) {
+                    // console.log('xxxxxxxxxxxxx');
+                    btn.down = true
+                } else
+                    btn.down = false
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
 
     /** random(1) = 0.0 - 1.0; random(-1) = -1/1; random(true) = true/false; random(0, 100) = 0 - 100 */
     random(min, max) {
@@ -300,6 +355,17 @@ class JEE {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 class __JEEView {
     #jee
     camera = { x: 0, y: 0 }
@@ -315,6 +381,7 @@ class __JEEView {
     canvasCss = ""
     canvasRatio = 0
     canvasQuality = 1000
+    zoom = 1
 
     constructor(jee) {
         if (jee instanceof JEE) this.#jee = jee
@@ -346,6 +413,17 @@ class __JEEView {
             margin: 0px;
             `
 
+        document.body.innerHTML += `
+            <style>
+                @keyframes curtainIn {
+                    0% { transform: rotate(0deg); }
+                    25% { transform: rotate(-10deg); }
+                    75% { transform: rotate(10deg); }
+                    100% { transform: rotate(0deg); }
+                }
+            </style>
+            `
+        /*
         this.#consoleDiv = document.createElement("div") // ???
         this.#consoleDiv.style.cssText = `
             position: absolute ;
@@ -367,6 +445,7 @@ class __JEEView {
             border-radius: 0 0 5px 0;
             `
         document.body.appendChild(this.#consoleDiv)
+        */
 
         if (this.#jee.name) document.title = this.#jee.name
 
@@ -377,12 +456,8 @@ class __JEEView {
             document.head.appendChild(link)
         }
 
-        this.curtain = document.getElementById("mgmCurtain")
-        if (!this.curtain) {
-            this.curtain = document.createElement("div")
-            this.curtain.id = "mgmCurtain"
-            document.body.appendChild(this.curtain)
-        }
+        this.curtain = document.createElement("div")
+        document.body.appendChild(this.curtain)
 
         this.curtain.style.cssText += `
             position: absolute;
@@ -399,9 +474,16 @@ class __JEEView {
             `
         this.curtainIn = document.createElement("div")
         this.curtain.appendChild(this.curtainIn)
-        this.curtainIn.style.cssText = "text-align: center; padding: 30px;"
+        this.curtainIn.style.cssText = `
+            text-align: center; 
+            padding: 30px;
+            animation: curtainIn 20s linear infinite;
+            `
         if (this.curtainCss) this.curtainIn.style.cssText += this.curtainCss
-        this.curtainIn.innerHTML = "<b>JEE.js</b><br><small>0/0</small>"
+        this.curtainIn.innerHTML = `
+            <h2>JEE.js</h2>
+            <div><span>0</span>/<span>0</span></div>
+            `
     }
 
     #initCanvas() {
@@ -468,6 +550,8 @@ class __JEEView {
     }
 
     resizeWin() {
+        console.log('::: resizeWin');
+
         let ratio = 1
         if (this.canvasRatio === 0) ratio = innerWidth / innerHeight
         else ratio = this.canvasRatio
@@ -498,8 +582,22 @@ class __JEEView {
 
         const cpos = this.canvas.cpos
         const kh = cpos.height / this.canvasQuality
+        // console.log(this.canvas.cpos);
+
+        // this.#jee.control.mobileControlResize()
+
+        for (const el of this.#jee.control.mobile)
+            if (el instanceof jMBtn)
+                el.resize()
     }
 }
+
+
+
+
+
+
+
 
 
 
@@ -520,6 +618,7 @@ class __JEEControl {
     __init() {
         this.#initMouse()
         this.#initKeys()
+        this.#initMobileControl()
     }
 
     #initMouse() {
@@ -569,6 +668,211 @@ class __JEEControl {
             this.keys[keyNums[e.keyCode]] = false
         }
     }
+
+
+    #touchBtns = []
+    #touchSticks = []
+    #touchSK = {}
+    touch = {}
+    touchS = {}
+    touches = []
+    touchJoy = {}
+    touchesJoy = []
+    /** array of jMBtn */
+    mobile = [] // mobileTouches
+    #initMobileControl() {
+        const view = this.#jee.view
+        // view.resizeWin()
+        if (!this.#jee.isMobile) return
+
+        // if (!this.mobileStyle) this.mobileStyle = {}
+
+        const touchFn = e => {
+            this.touches = e.touches
+            // console.log(this.touches);
+            // for (let i = 0; i < this.touches.length; i++) {
+            // for(const ti of this.touches) {
+            //     // const ti = this.touches[i]
+            //     ti.px = ti.clientX - view.canvas.cpos.left
+            //     ti.py = ti.clientY - view.canvas.cpos.top
+            //     ti.x = ti.px / this.kfHeight - this.canvHW + view.camera.x
+            //     ti.y = -ti.py / this.kfHeight + this.canvHH + view.camera.y
+            // }
+            // if (this.touches[0]) {
+            //     this.touch.down = true
+            //     this.touch.x = this.touches[0].x
+            //     this.touch.y = this.touches[0].y
+            //     this.touch.px = this.touches[0].px
+            //     this.touch.py = this.touches[0].py
+            //     this.touch.wx = this.touches[0].clientX
+            //     this.touch.wy = this.touches[0].clientY
+            // } else {
+            //     this.touch.down = false
+            // }
+        }
+        /*
+        const touchFnJoy = e => {
+            this.touchesJoy = e.touches
+            for (let i = 0; i < this.touchesJoy.length; i++) {
+                const ti = this.touchesJoy[i]
+                ti.px = ti.clientX - view.canvas.cpos.left
+                ti.py = ti.clientY - view.canvas.cpos.top
+                ti.x = ti.px / this.kfHeight - this.canvHW + view.camera.x
+                ti.y = -ti.py / this.kfHeight + this.canvHH + view.camera.y
+            }
+            if (this.touchesJoy[0]) {
+                this.touchJoy.down = true
+                this.touchJoy.x = this.touchesJoy[0].x
+                this.touchJoy.y = this.touchesJoy[0].y
+                this.touchJoy.px = this.touchesJoy[0].px
+                this.touchJoy.py = this.touchesJoy[0].py
+                this.touchJoy.wx = this.touchesJoy[0].clientX
+                this.touchJoy.wy = this.touchesJoy[0].clientY
+            } else {
+                this.touchJoy.down = false
+            }
+        }
+        */
+        // ???
+        document.addEventListener("contextmenu", e => e.preventDefault())
+        document.addEventListener("touchstart", touchFn)
+        document.addEventListener("touchend", touchFn)
+        document.addEventListener("touchmove", touchFn)
+        // ???
+        // this.#jee.view.canvas.addEventListener("contextmenu", e => e.preventDefault())
+        // this.#jee.view.canvas.addEventListener("touchstart", touchFn)
+        // this.#jee.view.canvas.addEventListener("touchend", touchFn)
+        // this.#jee.view.canvas.addEventListener("touchmove", touchFn)
+
+        // const color = this.mobileColor || 'gray'
+        // const styleBtn = `
+        //     position: absolute; 
+        //     background-color: ' + color + '; 
+        //     border: 2px solid ' + color + '; 
+        //     border-radius: 100px; z-index: 1000;
+        // `
+        // if (!this.mobileControl) this.mobileControl = ''
+
+        for (let btn of this.mobile)
+            if (btn instanceof jMBtn)
+                this.touch[btn.name] = btn.init()
+        {
+            // console.log(el);
+            // el.init()
+            // this.#touchBtns.push(el)
+            /*
+            const name = c.trim()
+
+            let bcrd = ''
+            if (name == 'br1') bcrd = 'right: 20px; bottom: 40px;'
+            if (name == 'br2') bcrd = 'right: 20px; bottom: 120px;'
+            if (name == 'br3') bcrd = 'right: 100px; bottom: 40px;'
+            if (name == 'br4') bcrd = 'right: 100px; bottom: 120px;'
+            if (name == 'bl1') bcrd = 'left: 20px; bottom: 40px;'
+            if (name == 'bl2') bcrd = 'left: 20px; bottom: 120px;'
+            if (name == 'bl3') bcrd = 'left: 100px; bottom: 40px;'
+            if (name == 'bl4') bcrd = 'left: 100px; bottom: 120px;'
+            if (name == 'bc1') bcrd = 'left: calc(50% - 32px); bottom: 40px;'
+            if (name == 'bc2') bcrd = 'left: calc(50% - 32px); bottom: 120px;'
+
+            if (bcrd != '') {
+                const btn = document.createElement('div')
+                btn.style.cssText = styleBtn + bcrd + 'width: 60px; height: 60px; opacity: 0.3;'
+                document.body.appendChild(btn)
+                this.touch[name] = false
+                const cpos = btn.getBoundingClientRect()
+                const left = cpos.left - this.canvas.cpos.left
+                const top = cpos.top - this.canvas.cpos.top
+                this.#touchBtns.push({
+                    el: btn,
+                    name: name,
+                    x1: left,
+                    y1: top,
+                    x2: left + cpos.width,
+                    y2: top + cpos.height,
+                })
+            }
+
+            let bst = ''
+            if (name == 'stickL') bst = 'left: 40px; bottom: 40px;'
+            if (name == 'stickR') bst = 'right: 40px; bottom: 40px;'
+
+            if (bst != '') {
+                this.touch[name] = {
+                    down: false,
+                    angle: 0,
+                }
+                const stick = document.createElement('div')
+                stick.style.cssText = styleBtn + bst + ' width: 120px; height: 120px; opacity: 0.3;'
+                document.body.appendChild(stick)
+                this.touch[name] = false
+                const cpos = stick.getBoundingClientRect()
+                const left = cpos.left - this.canvas.cpos.left
+                const top = cpos.top - this.canvas.cpos.top
+                this.#touchSticks.push({
+                    el: stick,
+                    name: name,
+                    x1: left,
+                    y1: top,
+                    x2: left + cpos.width,
+                    y2: top + cpos.height,
+                    px: left + 60,
+                    py: top + 60,
+                    d1: 10,
+                    d2: 60,
+                })
+            }
+                */
+        }
+
+        // this.#touchBtns.forEach(btn => {
+        //     for (const j in this.mobileStyle)
+        //         for (const k in this.mobileStyle[j])
+        //             if (btn.name == j)
+        //                 btn.el.style[k] = this.mobileStyle[j][k]
+        // })
+
+        // this.#touchSticks.forEach(stick => {
+        //     for (const j in this.mobileStyle)
+        //         for (const k in this.mobileStyle[j])
+        //             if (stick.name == j)
+        //                 stick.el.style[k] = this.mobileStyle[j][k]
+        // })
+
+    }
+
+    mobileControlResize() {
+        // console.log('mobileControlResize');
+
+        // for (const el of this.mobile) {
+        //     if (el instanceof jMBtn)
+        //         el.resize()
+        // }
+        // const canvas = this.#jee.view.canvas
+        /*
+        for (const btn of this.#touchBtns) {
+            const cpos = btn.el.getBoundingClientRect()
+            const left = cpos.left - canvas.cpos.left
+            const top = cpos.top - canvas.cpos.top
+            btn.x1 = left
+            btn.y1 = top
+            btn.x2 = left + cpos.width
+            btn.y2 = top + cpos.height
+        }
+
+        // this.#touchSticks.forEach(stick => {
+        //     const cpos = stick.el.getBoundingClientRect()
+        //     const left = cpos.left - canvas.cpos.left
+        //     const top = cpos.top - canvas.cpos.top
+        //     stick.x1 = left
+        //     stick.y1 = top
+        //     stick.x2 = left + cpos.width
+        //     stick.y2 = top + cpos.height
+        //     stick.px = left + 60
+        //     stick.py = top + 60
+        // })
+        */
+    }
 }
 
 
@@ -609,7 +913,6 @@ class __JEEResource {
 
 class JEEObj {
     id
-    /** If need set another Jee */
     jee
     name = "JEE Obj"
     x = 0
@@ -624,6 +927,7 @@ class JEEObj {
     hidden = false
     size = 1
     isClone = false
+    /** Z and camera ratio */
     cameraZ = 1
     border = {
         width: null,
@@ -634,8 +938,9 @@ class JEEObj {
         field: null,
     }
 
+    /** The camera follows the object */
     cameraSnap = false
-    nonContact
+    nonContact // ???
 
     body = new __JEEObjBody(this)
     pic = new __JEEObjPic(this)
@@ -935,7 +1240,7 @@ class __JEEObjPic {
     width
     height
 
-    /** List parts of image. Format: [[x, y, width, height, picNum = 0],...] */
+    /** List of parts image. Format: [[x, y, width, height, picNum = 0], ...[]] */
     parts = []
 
     constructor(obj) {
@@ -948,54 +1253,44 @@ class __JEEObjPic {
             this.filesData.push(this.#jee.files.load(f))
     }
 
-    #cameraZx
-    #cameraZy
     draw() {
         if (!this.#obj.active) return
         if (this.#obj.hidden) return
 
         this.#animaWork()
 
-        let obj = this.#obj
-        let context = this.#jee.view.context
-
-        if (obj.onCamera === undefined) {
-            // это флаг нахождения в поле оtрисовки (вроде)
-            this.#cameraZx = -this.#jee.view.camera.x * obj.cameraZ
-            this.#cameraZy = this.#jee.view.camera.y * obj.cameraZ
-        } else {
-            this.#cameraZx = 0
-            this.#cameraZy = 0
-        }
-
-        // console.log(obj.name, obj.x + this.#jee.view.hw + this.#cameraZx)
+        const obj = this.#obj
+        const context = this.#jee.view.context
+        const zoom = this.#jee.view.zoom
 
         context.save()
         context.translate(
-            obj.x + this.#jee.view.hw + this.#cameraZx,
-            -obj.y + this.#jee.view.hh + this.#cameraZy
+            obj.x * zoom + this.#jee.view.hw + -this.#jee.view.camera.x * zoom * obj.cameraZ,
+            -obj.y * zoom + this.#jee.view.hh + this.#jee.view.camera.y * zoom * obj.cameraZ
         )
-
-        // this.drawPrimitives(2)
 
         if (obj.alpha !== undefined) context.globalAlpha = obj.alpha
         else context.globalAlpha = 1
+
         if (this.rotation != 0) context.rotate((this.rotation * Math.PI) / 180)
+
         // const flip = obj.getFlip()
         // context.scale(flip[0], flip[1])
         context.scale(this.flipX, this.flipY)
         if (obj.effect) context.filter = obj.effect // ???
 
-        // const pic = this.getPic()
         const sizes = this.getSizes()
         if (this.parts.length == 0) {
             const pic = this.filesData[this.num]
-            if (pic)
+            if (pic) {
+                const w = sizes.width * zoom
+                const h = sizes.height * zoom
                 context.drawImage(pic,
-                    -sizes.width / 2 + this.x * obj.size,
-                    -sizes.height / 2 - this.y * obj.size,
-                    sizes.width, sizes.height
+                    -w / 2 + this.x * obj.size,
+                    -h / 2 - this.y * obj.size,
+                    w, h
                 )
+            }
         }
         else {
             const picPrm = this.parts[this.num]
@@ -1003,20 +1298,17 @@ class __JEEObjPic {
             if (picPrm.length == 5) n = picPrm[4]
             const pic = this.filesData[n]
             if (pic) {
-                const w = picPrm[2]
-                const h = picPrm[3]
-                // console.log(this.num, picPrm);
-
+                const w = picPrm[2] * zoom
+                const h = picPrm[3] * zoom
                 context.drawImage(pic,
                     picPrm[0], picPrm[1],
-                    w, h,
+                    picPrm[2], picPrm[3],
                     -w / 2 + this.x * obj.size,
                     -h / 2 - this.y * obj.size,
                     w, h
                 )
             }
         }
-        // this.drawPrimitives(1)
 
         context.restore()
 
@@ -1036,30 +1328,32 @@ class __JEEObjPic {
 
         if (!brd.color) brd.color = "yellow"
         if (!brd.width) brd.width = 1
-        if (!brd.type) brd.type = "line"
+        if (!brd.type) brd.type = jBorderType.rect
 
-        let view = this.#jee.view
-        let context = view.context
-        let body = this.#obj.body
-        let scope = body.getScope()
-        const left = scope.left + view.hw + this.#cameraZx
-        const right = scope.right + view.hw + this.#cameraZx
-        const top = -scope.top + view.hh + this.#cameraZy
-        const bottom = -scope.bottom + view.hh + this.#cameraZy
+        const view = this.#jee.view
+        const context = view.context
+        const body = this.#obj.body
+        const scope = body.getScope()
+        const cameraZx = -this.#jee.view.camera.x * obj.cameraZ
+        const cameraZy = this.#jee.view.camera.y * obj.cameraZ
 
-        const x = this.#obj.x + view.hw + this.#cameraZx
-        const y = -this.#obj.y + view.hh + this.#cameraZy
+        const left = scope.left + view.hw + cameraZx
+        const right = scope.right + view.hw + cameraZx
+        const top = -scope.top + view.hh + cameraZy
+        const bottom = -scope.bottom + view.hh + cameraZy
+
+        const x = this.#obj.x + view.hw + cameraZx
+        const y = -this.#obj.y + view.hh + cameraZy
 
         this.dot(x, y)
 
-        if (brd.type == "dots") {
+        if (brd.type == jBorderType.dots) {
             this.dot(left, top, brd.color)
             this.dot(right, top, brd.color)
             this.dot(left, bottom, brd.color)
             this.dot(right, bottom, brd.color)
         }
-        if (brd.type == "line") {
-            // поменять на rect
+        if (brd.type == jBorderType.rect) {
             context.beginPath()
             context.lineWidth = brd.width
             context.strokeStyle = brd.color
@@ -1501,8 +1795,100 @@ var jBodyType = {
 
 
 var jBorderType = {
-    line: 'line',
+    rect: 'rect',
     dots: 'dots',
 }
+
+
+var jMBtnType = {
+    button: 'button',
+    joystick: 'joystick',
+}
+
+
+class jMBtn {
+    /** 
+     * type: jMBtnType (button/joystick); 
+     * x - if > 0 at right, else left;
+     * y - if > 0 at bottom, else top;
+     */
+    type
+    x = 0
+    y = 0
+    d = 50
+    name = ''
+    body
+    down = false
+    constructor(name, type, x, y, color = '#aaa', d = 50) {
+        this.name = name
+        this.type = type
+        this.x = x
+        this.y = y
+        this.d = d
+        this.color = color
+
+        // this.init()
+    }
+
+    init() {
+        let px = `left: ${this.x}px`
+        if (this.x < 0) px = `right: ${-this.x}px`
+        let py = `bottom: ${this.y}px`
+        if (this.y < 0) py = `top: ${-this.y}px`
+        this.body = document.createElement('div')
+        // this.body.innerHTML = this.name
+        // this.body.id = this.name
+        this.body.style.cssText = `
+            position: absolute; 
+            ${py};
+            ${px};
+            z-index: 1000;
+            width: ${this.d}px;
+            height: ${this.d}px;
+            opacity1: 0.3;
+            background: ${this.color};
+            border-radius: 50%;
+        `
+        document.body.appendChild(this.body)
+        return this
+
+        // console.log(this.body);
+        // this.body.remove()
+
+        // this.resize()
+
+        // console.log(btn);
+        // document.body.innerHTML += 'zzzzzzzzzzzzzzz'
+
+        // this.touch[name] = false
+        // const cpos = btn.getBoundingClientRect()
+        // const left = cpos.left - this.canvas.cpos.left
+        // const top = cpos.top - this.canvas.cpos.top
+        // this.#touchBtns.push({
+        //     el: btn,
+        //     name: name,
+        //     x1: left,
+        //     y1: top,
+        //     x2: left + cpos.width,
+        //     y2: top + cpos.height,
+        // })
+    }
+
+    cpos
+    resize() {
+        console.log('resize');
+        if (this.body)
+            this.cpos = this.body.getBoundingClientRect()
+        // console.log(this.name, this.body.getBoundingClientRect(), this.body);
+
+        // document.body.innerHTML += 'zzzzzzzzzzzzzzz'
+    }
+
+    setStyle(name, cssText) {
+
+    }
+}
+
+
 
 
