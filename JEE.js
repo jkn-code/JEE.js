@@ -1045,8 +1045,6 @@ class JEEObj {
     /** Run in every frame */
     update() { }
 
-    // contactIn = null
-    // contactOut = null
 
 
 
@@ -1063,10 +1061,7 @@ class JEEObj {
 
         this.#waitsWork()
         this.body.__work()
-        // this.body.setCollider()
-        // this.body.physicsWork()
 
-        // if (this.anglePic) this.rotation = this.angle
         if (this.cameraSnap) {
             this.jee.view.camera.x = this.x
             this.jee.view.camera.y = this.y
@@ -1074,8 +1069,7 @@ class JEEObj {
     }
 
     __draw() {
-        // if (!this.ready) return
-        // if (this.toDelete) return
+        if (!this.ready) return
 
         this.pic.draw()
     }
@@ -1310,8 +1304,8 @@ class __JEEObjPic {
 
         view.context.save()
         view.context.translate(
-            obj.x * zoom + view.hw + -camX * obj.cameraZ,
-            -obj.y * zoom + view.hh + camY * obj.cameraZ
+            objX + view.hw + -camX * obj.cameraZ,
+            -objY + view.hh + camY * obj.cameraZ
         )
 
         if (obj.alpha !== undefined) view.context.globalAlpha = obj.alpha
@@ -1326,45 +1320,36 @@ class __JEEObjPic {
 
         if (this.parts.length == 0) {
             const pic = this.filesData[this.num]
-            if (pic) {
-                // const w = sizes.width * zoom
-                // const h = sizes.height * zoom
-                view.context.drawImage(pic,
-                    -w / 2 + this.x * obj.size,
-                    -h / 2 - this.y * obj.size,
-                    w, h
-                )
-            }
+            if (pic) view.context.drawImage(pic,
+                -w / 2 + this.x * obj.size,
+                -h / 2 - this.y * obj.size,
+                w, h
+            )
         }
         else {
-            // const picPrm = this.parts[this.num]
             let n = 0
             if (picPrm.length == 5) n = picPrm[4]
             const pic = this.filesData[n]
-            if (pic) {
-                // const w = picPrm[2] * zoom
-                // const h = picPrm[3] * zoom
-                view.context.drawImage(pic,
-                    picPrm[0], picPrm[1],
-                    picPrm[2], picPrm[3],
-                    -w / 2 + this.x * obj.size,
-                    -h / 2 - this.y * obj.size,
-                    w, h
-                )
-            }
+            if (pic) view.context.drawImage(pic,
+                picPrm[0], picPrm[1],
+                picPrm[2], picPrm[3],
+                -w / 2 + this.x * obj.size,
+                -h / 2 - this.y * obj.size,
+                w, h
+            )
         }
 
         view.context.restore()
 
-        this.boardsShow()
+        this.boardsShow(objX, objY, camX, camY)
     }
 
     dot(x, y, col = "#ff0") {
         this.#jee.view.context.fillStyle = col
-        this.#jee.view.context.fillRect(x - 1, y - 1, 3, 3)
+        this.#jee.view.context.fillRect(x - 1, y - 1, 13, 13)
     }
 
-    boardsShow() {
+    boardsShow(objX, objY, camX, camY) {
         let brd = this.#obj.border
         if (this.#jee.border.on) brd = this.#jee.border
         if (!brd.color && !brd.width && !brd.type && !brd.field && !brd.txtFnc)
@@ -1374,21 +1359,19 @@ class __JEEObjPic {
         if (!brd.width) brd.width = 1
         if (!brd.type) brd.type = jBorderType.rect
 
+        const obj = this.#obj
         const view = this.#jee.view
-        const context = view.context
-        const body = this.#obj.body
-        const scope = body.getScope()
-        const cameraZx = -this.#jee.view.camera.x * this.#obj.cameraZ
-        const cameraZy = this.#jee.view.camera.y * this.#obj.cameraZ
+        const zoom = view.zoom
+        const scope = obj.body.getScope()
+        const sizes = obj.body.getSizes()
 
-        const left = scope.left + view.hw + cameraZx
-        const right = scope.right + view.hw + cameraZx
-        const top = -scope.top + view.hh + cameraZy
-        const bottom = -scope.bottom + view.hh + cameraZy
+        const left = scope.left * zoom + view.hw + -camX * obj.cameraZ
+        const right = scope.right * zoom + view.hw + -camX * obj.cameraZ
+        const top = -scope.top * zoom + view.hh + camY * obj.cameraZ
+        const bottom = -scope.bottom * zoom + view.hh + camY * obj.cameraZ
 
-        const x = this.#obj.x + view.hw + cameraZx
-        const y = -this.#obj.y + view.hh + cameraZy
-
+        const x = objX + view.hw + -camX * obj.cameraZ
+        const y = -objY + view.hh + camY * obj.cameraZ
         this.dot(x, y)
 
         if (brd.type == jBorderType.dots) {
@@ -1398,23 +1381,23 @@ class __JEEObjPic {
             this.dot(right, bottom, brd.color)
         }
         if (brd.type == jBorderType.rect) {
-            context.beginPath()
-            context.lineWidth = brd.width
-            context.strokeStyle = brd.color
-            context.moveTo(left, top)
-            context.lineTo(right, top)
-            context.lineTo(right, bottom)
-            context.lineTo(left, bottom)
-            context.lineTo(left, top)
-            context.stroke()
+            view.context.beginPath()
+            view.context.lineWidth = brd.width
+            view.context.strokeStyle = brd.color
+            view.context.moveTo(left, top)
+            view.context.lineTo(right, top)
+            view.context.lineTo(right, bottom)
+            view.context.lineTo(left, bottom)
+            view.context.lineTo(left, top)
+            view.context.stroke()
         }
         if (brd.txtFnc) {
-            context.fillStyle = brd.color
-            context.fillText(brd.txtFnc(this.#obj), left, top - 10)
+            view.context.fillStyle = brd.color
+            view.context.fillText(brd.txtFnc(this.#obj), left, top - 10)
         }
         if (brd.field) {
-            context.fillStyle = brd.color
-            context.fillText(this.#obj[brd.field], left, top - 10)
+            view.context.fillStyle = brd.color
+            view.context.fillText(this.#obj[brd.field], left, top - 10)
         }
     }
 
