@@ -6,7 +6,6 @@ window.onload = () => jee = new Jee()
 
 
 class JEE {
-    // static _ = {}
     /** List of game objects */
     objects = []
     /** Game objects counter */
@@ -22,7 +21,6 @@ class JEE {
     /** For 2.5D game */
     orderY = false
     fpsLimit = 63
-    // fullscreen = false // ???
     // autorun = true // ???
     loadPause = 0.5
     border = {
@@ -43,7 +41,7 @@ class JEE {
 
     view = new __jView(this)
     control = new __jControl(this)
-    files = new __JEEResource(this)
+    files = new __jResource(this)
 
     constructor() {
         this.#isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -142,7 +140,6 @@ class JEE {
         }
         this.update()
 
-        // this.#touchWork()
         this.control.__work()
         this.#loopUpdate()
         this.#loopDraw()
@@ -238,21 +235,35 @@ class JEE {
         return this.random(-this.view.hh + s, this.view.hh - s)
     }
 
-    getObj(key, prm) {
-        for (const obj of this.objects)
-            if (obj instanceof jObj && obj.active)
-                if (obj[key] == prm)
-                    return obj
-    }
-    getObjs(key, prm) {
-        let ot = []
-        for (const obj of this.objects)
-            if (obj instanceof jObj)
-                if (obj.active && obj[key] == prm)
-                    ot.push(obj)
-        return ot
-    }
-    getObj2() {
+    // getObj(key, prm) {
+    //     for (const obj of this.objects)
+    //         if (obj instanceof jObj && obj.active) {
+    //             console.log(key, obj[key]);
+                
+    //             if (obj[key] == prm) {
+    //                 console.log('++++++++', obj[key], prm);
+                    
+    //                 return obj
+    //             }
+    //         }
+    // }
+    // getObjs(key, prm) {
+    //     let ot = []
+    //     for (const obj of this.objects)
+    //         if (obj instanceof jObj)
+    //             if (obj.active && obj[key] == prm)
+    //                 ot.push(obj)
+    //     return ot
+    // }
+    // getObj2() {
+    /** Find game-object with fields equal to the given values. 
+     * Set arguments (['field-name', 'value'], ...[]).
+     * If type arguments is string then field-name set 'name'.
+     * */
+    getObj() {
+        if (arguments.length == 1 && !Array.isArray(arguments[0])) 
+            arguments[0] = ['name', arguments[0]]
+
         for (const obj of this.objects)
             if (obj instanceof jObj && obj.active) {
                 let n = 0
@@ -265,8 +276,8 @@ class JEE {
                     return obj
             }
     }
-    getObjs2() {
-        // console.log(arguments.length);
+    // getObjs2() {
+    getObjs() {
         let ot = []
         for (const obj of this.objects)
             if (obj instanceof jObj && obj.active) {
@@ -779,7 +790,7 @@ class __jControl {
 
 
 
-class __JEEResource {
+class __jResource {
     all = 0
     ok = 0
 
@@ -1087,7 +1098,7 @@ class jObj {
     delete() {
         this.toDelete = true
         this.active = false
-        if (this.physics.type) this.physics.type = undefined
+        if (this.body.type) this.body.type = undefined
     }
 
     contact(key, val) {
@@ -1596,6 +1607,7 @@ class __jObjBody {
      * @default undefined
     */
     set type(val) {
+        if (this.#obj.fixed) return
         this.#type = val
         if (val) this.#jee.physics.add(this.#obj)
         else this.#jee.physics.remove(this.#obj)
