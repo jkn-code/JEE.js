@@ -100,9 +100,7 @@ class JEE {
 
         setTimeout(() => {
             this.view.curtain.style.display = "none"
-            let now,
-                elapsed,
-                then = Date.now()
+            let now, elapsed, then = Date.now()
             const animate = () => {
                 requestAnimationFrame(animate)
                 now = Date.now()
@@ -239,10 +237,10 @@ class JEE {
     //     for (const obj of this.objects)
     //         if (obj instanceof jObj && obj.active) {
     //             console.log(key, obj[key]);
-                
+
     //             if (obj[key] == prm) {
     //                 console.log('++++++++', obj[key], prm);
-                    
+
     //                 return obj
     //             }
     //         }
@@ -261,11 +259,12 @@ class JEE {
      * If type arguments is string then field-name set 'name'.
      * */
     getObj() {
-        if (arguments.length == 1 && !Array.isArray(arguments[0])) 
+        if (arguments.length == 1 && !Array.isArray(arguments[0]))
             arguments[0] = ['name', arguments[0]]
 
         for (const obj of this.objects)
-            if (obj instanceof jObj && obj.active) {
+            // if (obj instanceof jObj && obj.active) {
+            if (obj instanceof jObj) {
                 let n = 0
                 for (const i in arguments) {
                     const key = arguments[i][0]
@@ -280,7 +279,8 @@ class JEE {
     getObjs() {
         let ot = []
         for (const obj of this.objects)
-            if (obj instanceof jObj && obj.active) {
+            // if (obj instanceof jObj && obj.active) {
+            if (obj instanceof jObj) {
                 let n = 0
                 for (const i in arguments) {
                     const key = arguments[i][0]
@@ -381,11 +381,11 @@ class __jView {
     tabIcon = ""
     curtainCss
     canvasColor
-    cursorNone
     canvasCss = ""
-    canvasRatio = 0
+    ratio = 0
     canvasQuality = 1000
     zoom = 1
+    pixel = false
 
     constructor(jee) {
         if (jee instanceof JEE) this.#jee = jee
@@ -502,8 +502,8 @@ class __jView {
 
         if (this.pixel)
             // ???
-            // this.canvas.style.cssText += 'image-rendering: pixelated image-rendering: crisp-edges'
-            this.canvas.style.cssText += "image-rendering: pixelated"
+            // this.canvas.style.cssText += 'image-rendering: pixelated; image-rendering: crisp-edges;'
+            this.canvas.style.cssText += "image-rendering: pixelated;"
 
         this.__defCtxText = {
             textAlign: "left",
@@ -515,7 +515,7 @@ class __jView {
 
         this.context = this.canvas.getContext("2d")
         if (this.canvasColor) this.canvas.style.backgroundColor = this.canvasColor
-        if (this.cursorNone) this.canvas.style.cursor = "none"
+        // if (this.cursorNone) this.canvas.style.cursor = "none"
         document.body.appendChild(this.canvas)
 
         if (this.canvasCss) this.canvas.style.cssText += this.canvasCss
@@ -575,8 +575,8 @@ class __jView {
         console.log('::: resizeWin');
 
         let ratio = 1
-        if (this.canvasRatio === 0) ratio = innerWidth / innerHeight
-        else ratio = this.canvasRatio
+        if (this.ratio === 0) ratio = innerWidth / innerHeight
+        else ratio = this.ratio
 
         let height = innerHeight
         let width = innerHeight * ratio
@@ -589,6 +589,11 @@ class __jView {
         this.canvas.style.height = height + "px"
         this.canvas.width = this.canvasQuality * ratio
         this.canvas.height = this.canvasQuality
+        if (this.pixel) {
+            if (this.canvas.width % 2 == 1) this.canvas.width--
+            if (this.canvas.height % 2 == 1) this.canvas.height--
+        }
+        console.log(this.canvas.width, this.canvas.height, this.canvas.width % 2);
         this.kfHeight = height / this.canvasQuality
         this.hw = this.canvas.width / 2
         this.hh = this.canvas.height / 2
@@ -610,6 +615,10 @@ class __jView {
             this.#jee.control.__resizeMobile()
 
     }
+
+    set cursorNone(val) {
+        this.canvas.style.cursor = "none"
+    }
 }
 
 
@@ -629,7 +638,12 @@ class __jView {
 
 class __jControl {
     #jee
-    mouse = { x: 0, y: 0, px: 0, py: 0, cx: 0, cy: 0 }
+    mouse = {
+        camX: 0, camY: 0,
+        worldX: 0, worldY: 0,
+        down: false,
+        event: null,
+    }
 
     constructor(jee) {
         if (jee instanceof JEE) this.#jee = jee
@@ -644,25 +658,27 @@ class __jControl {
     #initMouse() {
         if (this.isMobile) return
 
-        this.#jee.view.canvas.onmousemove = (e) => {
-            this.mouse.px = e.pageX - this.#jee.view.canvas.cpos.left
-            this.mouse.py = e.pageY - this.#jee.view.canvas.cpos.top
-            this.mouse.cx = this.mouse.px / this.kfHeight - this.#jee.view.hw
-            this.mouse.cy = -this.mouse.py / this.kfHeight + this.#jee.view.hh
+        const view = this.#jee.view
+
+        // this.#jee.view.canvas.onmousemove = (e) => {
+        document.body.onmousemove = (e) => {
+            this.mouse.camX = (e.pageX - view.canvas.cpos.left) / view.kfHeight - view.hw
+            this.mouse.camY = (e.pageY - view.canvas.cpos.top) / view.kfHeight - view.hh
+            this.mouse.camX /= view.zoom
+            this.mouse.camY /= -view.zoom
         }
 
         this.#jee.view.canvas.onmousedown = (e) => {
             this.mouse.down = true
-            this.mouse.up = false
-            this.mouse.which = e.which
+            this.mouse.event = e
         }
 
         this.#jee.view.canvas.onmouseup = (e) => {
             this.mouse.down = false
-            this.mouse.up = true
-            this.mouse.which = e.which
+            this.mouse.event = e
         }
     }
+
 
     #initKeys() {
         const keyNames = { backspace: false, enter: false, shift: false, ctrl: false, escape: false, space: false, left: false, up: false, right: false, down: false, n0: false, n1: false, n2: false, n3: false, n4: false, n5: false, n6: false, n7: false, n8: false, n9: false, a: false, b: false, c: false, d: false, e: false, f: false, g: false, h: false, i: false, j: false, k: false, l: false, m: false, n: false, o: false, p: false, q: false, r: false, s: false, t: false, u: false, v: false, w: false, x: false, y: false, z: false, }
@@ -691,6 +707,8 @@ class __jControl {
 
     __work() {
         this.#touchWork()
+        this.mouse.worldX = this.#jee.view.camera.x + this.mouse.camX
+        this.mouse.worldY = this.#jee.view.camera.y + this.mouse.camY
     }
 
 
@@ -846,6 +864,7 @@ class jObj {
         type: null,
         color: null,
         txtFnc: null,
+        /** String or array of string name fields obj */
         field: null,
     }
 
@@ -938,7 +957,7 @@ class jObj {
     #startFrame
     __work() {
         if (!this.ready) return
-        // console.log('========' + this.name + '=========')
+        // console.log('======== ' + this.name + ' =========')
         if (!this.#startFrame) {
             this.#startFrame = true
             if (this.start) this.start()
@@ -1167,6 +1186,10 @@ class __jObjPic {
         const view = this.#jee.view
         const zoom = view.zoom
         const obj = this.#obj
+        if (view.pixel) {
+            obj.x = Math.round(obj.x)
+            obj.y = Math.round(obj.y)
+        }
         const objX = obj.x * zoom
         const objY = obj.y * zoom
         const camX = view.camera.x * zoom
@@ -1200,6 +1223,7 @@ class __jObjPic {
             drawY = view.hh
         }
         view.context.translate(objX + drawX, -objY + drawY)
+        // view.context.translate(obj.x + view.hw, -obj.y + view.hh)
 
         if (obj.alpha !== undefined) view.context.globalAlpha = obj.alpha
         else view.context.globalAlpha = 1
@@ -1239,10 +1263,11 @@ class __jObjPic {
 
     dot(x, y, col = "#ff0") {
         this.#jee.view.context.fillStyle = col
-        this.#jee.view.context.fillRect(x - 1, y - 1, 13, 13)
+        this.#jee.view.context.fillRect(x - 1, y - 1, 3, 3)
     }
 
     boardsShow(objX, objY, drawX, drawY) {
+
         let brd = this.#obj.border
         if (this.#jee.border.on) brd = this.#jee.border
         if (!brd.color && !brd.width && !brd.type && !brd.field && !brd.txtFnc)
@@ -1274,6 +1299,8 @@ class __jObjPic {
             this.dot(right, bottom, brd.color)
         }
         if (brd.type == jBorderType.rect) {
+            // if (this.#obj.name == 'Collider')
+            // console.log('>>> ', this.#obj.name, scope);
             view.context.beginPath()
             view.context.lineWidth = brd.width
             view.context.strokeStyle = brd.color
@@ -1289,8 +1316,13 @@ class __jObjPic {
             view.context.fillText(brd.txtFnc(this.#obj), left, top - 10)
         }
         if (brd.field) {
+            let fields = []
+            if (!Array.isArray(brd.field)) fields.push(brd.field)
+            else fields = brd.field
+            let txt = []
+            for (const f of fields) txt.push(this.#obj[f])
             view.context.fillStyle = brd.color
-            view.context.fillText(this.#obj[brd.field], left, top - 10)
+            view.context.fillText(txt.join(','), left, top - 10)
         }
     }
 
@@ -1399,6 +1431,12 @@ class __jObjBody {
         if (jee && jee instanceof JEE) this.#jee = jee
     }
 
+    __work() {
+        this.setCollider()
+        this.#contactsWork()
+        this.#physicsWork()
+    }
+
     getSizes() {
         const s = this.#obj.pic.getSizes()
         let w = s.width, h = s.height
@@ -1414,6 +1452,9 @@ class __jObjBody {
     #oldPrm = { x: null, y: null, size: null }
     setCollider() {
         // if (this.#obj.nonContact) return
+
+        // if (this.#obj.name == 'House enter')
+        // console.log(this.#obj.name);
 
         // перезадавать если сменились:
         // x,y,size
@@ -1466,16 +1507,7 @@ class __jObjBody {
     }
 
 
-
-    __work() {
-        this.setCollider()
-        this.#contactsWork()
-        this.#physicsWork()
-    }
-
-
     contactor = {
-        // on: true,
         listObjId: [],
         enterList: [],
         exitList: [],
@@ -1590,7 +1622,66 @@ class __jObjBody {
         return ot
     }
 
+    #clicked
+    get click() {
+        const mouse = this.#jee.control.mouse
+        if (mouse.down && !this.#clicked) {
+            let cont = false
 
+            if (!this.#obj.fixed &&
+                mouse.worldX > this.#left &&
+                mouse.worldX < this.#right &&
+                mouse.worldY > this.#bottom &&
+                mouse.worldY < this.#top)
+                cont = true
+            if (this.#obj.fixed &&
+                mouse.camX > this.#left &&
+                mouse.camX < this.#right &&
+                mouse.camY > this.#bottom &&
+                mouse.camY < this.#top)
+                cont = true
+
+            if (cont) {
+                this.#clicked = true
+                return true
+            }
+        }
+        if (!mouse.down && this.#clicked)
+            this.#clicked = false
+    }
+
+    get push() {
+        const mouse = this.#jee.control.mouse
+        if (mouse.down) {
+            if (!this.#obj.fixed &&
+                mouse.worldX > this.#left &&
+                mouse.worldX < this.#right &&
+                mouse.worldY > this.#bottom &&
+                mouse.worldY < this.#top)
+                return true
+            if (this.#obj.fixed &&
+                mouse.camX > this.#left &&
+                mouse.camX < this.#right &&
+                mouse.camY > this.#bottom &&
+                mouse.camY < this.#top)
+                return true
+        }
+    }
+    get hover() {
+        const mouse = this.#jee.control.mouse
+        if (!this.#obj.fixed &&
+            mouse.worldX > this.#left &&
+            mouse.worldX < this.#right &&
+            mouse.worldY > this.#bottom &&
+            mouse.worldY < this.#top)
+            return true
+        if (this.#obj.fixed &&
+            mouse.camX > this.#left &&
+            mouse.camX < this.#right &&
+            mouse.camY > this.#bottom &&
+            mouse.camY < this.#top)
+            return true
+    }
 
 
 
@@ -1608,6 +1699,7 @@ class __jObjBody {
     */
     set type(val) {
         if (this.#obj.fixed) return
+
         this.#type = val
         if (val) this.#jee.physics.add(this.#obj)
         else this.#jee.physics.remove(this.#obj)
@@ -1812,5 +1904,5 @@ class jMBtn {
 }
 
 
-
+// var jClear = class extends jObj { }
 
